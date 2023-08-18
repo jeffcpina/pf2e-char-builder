@@ -6,8 +6,8 @@
   "authors": [
       {
           "name": "Jeffrey Pina",
-          "discord": "MyDiscordUsername#42",
-          "url": "https://www.mywebsite.com/"
+          "discord": "InsaneBane",
+          "url": "https://github.com/jeffcpina/pf2e-char-builder/tree/v0.8.0"
       }
   ],
   "version": "1.0.0",
@@ -73,9 +73,9 @@
       "flags": {}
     }
   ],
-  "download": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/1.0.0/pf2e-char-builder.zip",
-  "manifest": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/1.0.0/module.json",
-  "license": "LICENSE",
+  "download": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.8.0/pf2e-char-builder.zip",
+  "manifest": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.8.0/module.json",
+  "license": "MIT",
   "readme": "README.md",
-  "url": "#{URL}#"
+  "url": "https://github.com/jeffcpina/pf2e-char-builder/tree/v0.8.0"
 }
