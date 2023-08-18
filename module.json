@@ -1,0 +1,81 @@
+{
+  "id": "pf2e-char-builder",
+  "name": "Pathfinder 2e Character Builder",
+  "title": "Pathfinder 2e Character Builder",
+  "description": "Uses existing character sheet and add additions to help create a Pathfinder 2e Character. Such as a tutorial, key information added to sheet to guide user, additional tab on compendium, and a spell generator design against different classes",
+  "authors": [
+      {
+          "name": "Jeffrey Pina",
+          "discord": "MyDiscordUsername#42",
+          "url": "https://www.mywebsite.com/"
+      }
+  ],
+  "version": "1.0.0",
+  "library": "false",
+  "manifestPlusVersion": "1.2.0",
+  "compatibility": {
+    "minimum": 9,
+    "verified": 10,
+    "maximum": 11
+  },
+  "esmodules": [
+    "scripts/module.mjs",
+    "scripts/spellbuilder.mjs",
+    "scripts/tutorial.mjs",
+    "scripts/scoredrawer.mjs"
+  ],
+  "styles": [
+    "styles/module.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "languages/en.json"
+    }
+  ],
+  "packs": [
+    {
+      "label": "Builder Addons",
+      "type": "Item",
+      "name": "addons",
+      "path": "packs/addons.db",
+      "system": "pf2e",
+      "private": false,
+      "flags": {}
+    },
+    {
+      "label": "Builder Eiodolon",
+      "type": "Item",
+      "name": "eiodolon",
+      "path": "packs/eiodolon.db",
+      "system": "pf2e",
+      "private": false,
+      "flags": {}
+    },
+    {
+      "label": "Builder Feats",
+      "type": "Item",
+      "name": "feats",
+      "path": "packs/feats.db",
+      "system": "pf2e",
+      "private": false,
+      "flags": {}
+    }
+    ,
+    {
+      "label": "Builder Options",
+      "type": "JournalEntry",
+      "name": "options",
+      "path": "packs/options.db",
+      "system": "pf2e",
+      "private": false,
+      "flags": {}
+    }
+  ],
+  "download": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/1.0.0/pf2e-char-builder.zip",
+  "manifest": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/1.0.0/module.json",
+  "license": "LICENSE",
+  "readme": "README.md",
+  "url": "#{URL}#"
+}
