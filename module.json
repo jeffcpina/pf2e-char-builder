@@ -45,15 +45,6 @@
       "flags": {}
     },
     {
-      "label": "Builder Eiodolon",
-      "type": "Item",
-      "name": "eiodolon",
-      "path": "packs/eiodolon.db",
-      "system": "pf2e",
-      "private": false,
-      "flags": {}
-    },
-    {
       "label": "Builder Feats",
       "type": "Item",
       "name": "feats",
@@ -61,8 +52,7 @@
       "system": "pf2e",
       "private": false,
       "flags": {}
-    }
-    ,
+    },
     {
       "label": "Builder Options",
       "type": "JournalEntry",

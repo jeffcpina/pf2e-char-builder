@@ -1,6 +1,6 @@
 console.debug("PF2e System | PF2e Character Builder - Tutorial | Started "); 
 export const modName = "PF2e Character Original Builder";
-const mod = "jcp-custom-module";
+const mod = "pf2e-char-builder";
 
 
 async function loadHandleBarTemplates()

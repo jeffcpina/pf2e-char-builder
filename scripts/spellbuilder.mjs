@@ -422,7 +422,6 @@ function addLines(orig,changes){
         ) {validRules.push(val)}    
     })
     if (validRules.length == 0) return []
-    //console.debug(["data",[...orig, ...validRules]])
     return [...orig, ...validRules];
 }
 function delLines(orig,changes){
@@ -772,24 +771,11 @@ Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
     }   
     checkForDeityDomainFeats(actor); 
     var pcClass = html.find(".pc_class");
-   /*  pcClass.on("drop", function(event) {
-        event.preventDefault();  
-        event.stopPropagation();
-        console.debug(["event",event])
-        //checkifClassDeletedToRemoveSpells(actor, html);
-    }); */
-    console.debug(["pc Class",pcClass.length])
 });
 Hooks.on('dropActorSheetData', async (actor, actorSheet, data) => {
-    console.debug(["dropactorSheet",actor,actorSheet,data])
     await removeAllSpells(actor) 
 });
 Hooks.on('renderActorSheet', (actor, html, data) => {
     actor = game.actors.get(data.actor._id);
-    console.debug(["renderactorSheet",actor,html,data])
-    actor = game.actors.get(data.actor._id);
     if (actor.class==null) checkifClassDeletedToRemoveSpells(actor, html)
 });
-//bard: muse spells missing
-//champion: tenets of good/evil unrecognized rule 
-//psychic: whispers has wrong spells
