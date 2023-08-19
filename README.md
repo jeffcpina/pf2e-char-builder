@@ -1,2 +1,1 @@
-# pf2e-char-builder
-# pf2e-char-builder
+# Pathfinder 2 Character Builder Assistant

@@ -6,19 +6,19 @@ const mod = "pf2e-char-builder";
 async function loadHandleBarTemplates()
 {
   // register templates parts
-  const templatePaths = [
-    `modules/${mod}/templates/tutorial/tabs/intro.hbs`,
-    `modules/${mod}/templates/tutorial/tabs/ancestry.hbs`,
-    `modules/${mod}/templates/tutorial/tabs/background.hbs`,
-    `modules/${mod}/templates/tutorial/tabs/classSheet.hbs`,
-    `modules/${mod}/templates/tutorial/tabs/scores.hbs`,
-    `modules/${mod}/templates/tutorial/tabs/misc.hbs`,
-    `modules/${mod}/templates/tutorial/tabs/profs.hbs`,
-    `modules/${mod}/templates/tutorial/tabs/feats.hbs`,
-    `modules/${mod}/templates/tutorial/tabs/spells.hbs`,
-    `modules/${mod}/templates/tutorial/tabs/bio.hbs`
-  ];
-  return loadTemplates( templatePaths );
+    const templatePaths = [
+        `modules/${mod}/templates/tutorial/tabs/intro.hbs`,
+        `modules/${mod}/templates/tutorial/tabs/ancestry.hbs`,
+        `modules/${mod}/templates/tutorial/tabs/background.hbs`,
+        `modules/${mod}/templates/tutorial/tabs/classSheet.hbs`,
+        `modules/${mod}/templates/tutorial/tabs/scores.hbs`,
+        `modules/${mod}/templates/tutorial/tabs/misc.hbs`,
+        `modules/${mod}/templates/tutorial/tabs/profs.hbs`,
+        `modules/${mod}/templates/tutorial/tabs/feats.hbs`,
+        `modules/${mod}/templates/tutorial/tabs/spells.hbs`,
+        `modules/${mod}/templates/tutorial/tabs/bio.hbs`
+    ];
+    return loadTemplates( templatePaths );
 }
 
 class tutorial extends Application {
@@ -43,8 +43,18 @@ class tutorial extends Application {
         return options;
     }
     getData() {
-        var test = "hello";
-        let data = {test};
+        let data = {};
+        data.mod = mod;
+        data["intro"]=`modules/${mod}/templates/tutorial/tabs/intro.hbs`
+        data["ancestry"]=`modules/${mod}/templates/tutorial/tabs/ancestry.hbs`
+        data["background"]=`modules/${mod}/templates/tutorial/tabs/background.hbs`
+        data["classSheet"]=`modules/${mod}/templates/tutorial/tabs/classSheet.hbs`
+        data["scores"]=`modules/${mod}/templates/tutorial/tabs/scores.hbs`
+        data["misc"]=`modules/${mod}/templates/tutorial/tabs/misc.hbs`
+        data["profs"]=`modules/${mod}/templates/tutorial/tabs/profs.hbs`
+        data["feats"]=`modules/${mod}/templates/tutorial/tabs/feats.hbs`
+        data["spells"]=`modules/${mod}/templates/tutorial/tabs/spells.hbs`
+        data["bio"]=`modules/${mod}/templates/tutorial/tabs/bio.hbs`
         return data;
     }
     activateListeners($html) {

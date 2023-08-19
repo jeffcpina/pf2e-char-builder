@@ -40,36 +40,37 @@
             </div>
             <!-- BODY -->
             <section class="sheet-content">
+                
                 <!-- Intro -->
-                {{> "modules/jcp-custom-module/templates/tutorial/tabs/intro.hbs"}}
+                {{> (lookup . 'intro')  }}
 
                 <!-- Ancestry -->
-                {{> "modules/jcp-custom-module/templates/tutorial/tabs/ancestry.hbs"}}
+                {{> (lookup . 'ancestry')  }}
                 
                 <!-- Background -->
-                {{> "modules/jcp-custom-module/templates/tutorial/tabs/background.hbs"}}
+                {{> (lookup . 'background')  }}
                 
                 <!-- Class -->
-                {{> "modules/jcp-custom-module/templates/tutorial/tabs/classSheet.hbs"}}
+                {{> (lookup . 'classSheet')  }}
 
                 <!-- Scores -->
-                {{> "modules/jcp-custom-module/templates/tutorial/tabs/scores.hbs"}}
+                {{> (lookup . 'scores')  }}
                 
                 <!-- Misc -->
-                {{> "modules/jcp-custom-module/templates/tutorial/tabs/misc.hbs"}}
+                {{> (lookup . 'misc')  }}
                 
                 <!-- Profs -->
-                {{> "modules/jcp-custom-module/templates/tutorial/tabs/profs.hbs"}}
+                {{> (lookup . 'profs')  }}
                 
                 <!-- FEATS -->
-                {{> "modules/jcp-custom-module/templates/tutorial/tabs/feats.hbs"}}
+                {{> (lookup . 'feats')  }}
                 
                 <!-- Spells -->
-                {{> "modules/jcp-custom-module/templates/tutorial/tabs/spells.hbs"}}
+                {{> (lookup . 'spells')  }}
                 
                 <!-- BIOGRAPHY -->
-                {{> "modules/jcp-custom-module/templates/tutorial/tabs/bio.hbs"}}
-                
+                {{> (lookup . 'bio')  }}
+
             </section>
         </form>
 </div>    
