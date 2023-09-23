@@ -5,50 +5,55 @@
                 <h1 class="tut-head">Welcome to Pathfinder</h1>
                 <!-- SHEET NAVIGATION -->
                 <nav class="sheet-navigation" data-group="primary">
-                    <a class="item" data-tab="intro" data-coord="102,228,595,620" data-parent-tab="character" title="Welcome to Pathfinder">
+                    <a class="item" data-tab="intro" data-coord="0,780,655,733" data-parent-tab="character" title="Welcome to Pathfinder">
                         Intro
                     </a>
-                    <a class="item" data-tab="ancestry" data-coord="305,228,595,450" data-parent-tab="character" title="Ancestry">
+                    <a class="item" data-tab="interface" data-coord="0,780,655,560" data-parent-tab="character" title="Foundry Interface">
+                        Interface
+                    </a>
+                    <a class="item" data-tab="ancestry" data-coord="0,780,655,470" data-parent-tab="character" title="Ancestry">
                         Ancestry
                     </a>
-                    <a class="item" data-tab="background" data-coord="305,228,595,450" data-parent-tab="character" title="Background">
+                    <a class="item" data-tab="background" data-coord="0,780,655,390" data-parent-tab="character" title="Background">
                         Background
                     </a>
-                    <a class="item" data-tab="classSheet" data-coord="305,228,595,450" data-parent-tab="character" title="Class">
+                    <a class="item" data-tab="classSheet" data-coord="0,780,655,440" data-parent-tab="character" title="Class">
                         Class
                     </a>
-                    <a class="item" data-tab="scores" data-coord="134,228,595,450" data-parent-tab="character"  title="Ability Scores">
+                    <a class="item" data-tab="scores" data-coord="0,780,655,400" data-parent-tab="character"  title="Ability Scores">
                         Scores
                     </a>
-                    <a class="item" data-tab="misc" data-coord="600,228,595,420" data-parent-tab="character" title="Miscellaneous">
+                    <a class="item" data-tab="misc" data-coord="0,780,655,520" data-parent-tab="character" title="Miscellaneous">
                         Misc
                     </a>
-                    <a class="item" data-tab="profs" data-coord="665,228,595,320" data-parent-tab="proficiencies" title="Proficiencies">
+                    <a class="item" data-tab="profs" data-coord="0,780,655,500" data-parent-tab="proficiencies" title="Proficiencies">
                         Profs
                     </a>
-                    <a class="item" data-tab="feats" data-coord="540,228,595,320" data-parent-tab="feats" title="Feats">
+                    <a class="item" data-tab="feats" data-coord="0,780,655,460" data-parent-tab="feats" title="Feats">
                         Feats
                     </a>
-                    <a class="item" data-tab="spells" data-coord="359,228,595,420" data-parent-tab="spellcasting" title="Spells">
+                    <a class="item" data-tab="spells" data-coord="0,780,655,520" data-parent-tab="spellcasting" title="Spells">
                         Spells
                     </a>
-                    <a class="item" data-tab="bio" data-coord="665,228,595,420" data-parent-tab="biography" title="Biography">
+                    <a class="item" data-tab="bio" data-coord="0,780,655,450" data-parent-tab="biography" title="Biography">
                         Bio
                     </a>
-
                 </nav>
             </div>
             <!-- BODY -->
             <section class="sheet-content">
-                
+
                 <!-- Intro -->
                 {{> (lookup . 'intro')  }}
 
+                <!-- Interface -->
+                {{> (lookup . 'interface')  }}     
+
                 <!-- Ancestry -->
-                {{> (lookup . 'ancestry')  }}
-                
+                {{> modules/pf2e-char-builder/templates/tutorial/tabs/ancestry.hbs }}
+
                 <!-- Background -->
-                {{> (lookup . 'background')  }}
+                {{> modules/pf2e-char-builder/templates/tutorial/tabs/background.hbs  }}
                 
                 <!-- Class -->
                 {{> (lookup . 'classSheet')  }}

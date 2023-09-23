@@ -1,40 +1,42 @@
 console.debug("PF2e System | PF2e Character Builder - Tutorial | Started "); 
-export const modName = "PF2e Character Original Builder";
+export const modName = "PF2e Character Builder";
 const mod = "pf2e-char-builder";
 
 
 async function loadHandleBarTemplates()
 {
   // register templates parts
+  var tutDir = `modules/${mod}/templates/tutorial/tabs/`
     const templatePaths = [
-        `modules/${mod}/templates/tutorial/tabs/intro.hbs`,
-        `modules/${mod}/templates/tutorial/tabs/ancestry.hbs`,
-        `modules/${mod}/templates/tutorial/tabs/background.hbs`,
-        `modules/${mod}/templates/tutorial/tabs/classSheet.hbs`,
-        `modules/${mod}/templates/tutorial/tabs/scores.hbs`,
-        `modules/${mod}/templates/tutorial/tabs/misc.hbs`,
-        `modules/${mod}/templates/tutorial/tabs/profs.hbs`,
-        `modules/${mod}/templates/tutorial/tabs/feats.hbs`,
-        `modules/${mod}/templates/tutorial/tabs/spells.hbs`,
-        `modules/${mod}/templates/tutorial/tabs/bio.hbs`
+        `${tutDir}intro.hbs`,
+        `${tutDir}interface.hbs`,
+        `${tutDir}ancestry.hbs`,
+        `${tutDir}background.hbs`,
+        `${tutDir}classSheet.hbs`,
+        `${tutDir}scores.hbs`,
+        `${tutDir}misc.hbs`,
+        `${tutDir}profs.hbs`,
+        `${tutDir}feats.hbs`,
+        `${tutDir}spells.hbs`,
+        `${tutDir}bio.hbs`
     ];
     return loadTemplates( templatePaths );
 }
-
 class tutorial extends Application {
-    constructor() {
+    constructor(actor_id) {
         super();
+        this.options.id = `tutorial-module-${actor_id}`;
         this._initialize();
     }  
     static get defaultOptions() {
         const options = super.defaultOptions;
         options.template = `modules/${mod}/templates/tutorial/tutorial.hbs`;
-        options.width = 595;
-        options.height = 620;
+        options.width = 655;
+        options.height = 733;
         options.classes = ['creation-tutorial'];
         options.title = "Creation Tutorial";
-        options.top = 102;
-        options.left = 228
+        options.top = 0;
+        options.left = 780;
         options.tabs = [{
             navSelector: ".sheet-navigation",
             contentSelector: ".sheet-content",
@@ -44,48 +46,80 @@ class tutorial extends Application {
     }
     getData() {
         let data = {};
-        data.mod = mod;
-        data["intro"]=`modules/${mod}/templates/tutorial/tabs/intro.hbs`
-        data["ancestry"]=`modules/${mod}/templates/tutorial/tabs/ancestry.hbs`
-        data["background"]=`modules/${mod}/templates/tutorial/tabs/background.hbs`
-        data["classSheet"]=`modules/${mod}/templates/tutorial/tabs/classSheet.hbs`
-        data["scores"]=`modules/${mod}/templates/tutorial/tabs/scores.hbs`
-        data["misc"]=`modules/${mod}/templates/tutorial/tabs/misc.hbs`
-        data["profs"]=`modules/${mod}/templates/tutorial/tabs/profs.hbs`
-        data["feats"]=`modules/${mod}/templates/tutorial/tabs/feats.hbs`
-        data["spells"]=`modules/${mod}/templates/tutorial/tabs/spells.hbs`
-        data["bio"]=`modules/${mod}/templates/tutorial/tabs/bio.hbs`
+        data.mod = mod; var tutDir = `modules/${mod}/templates/tutorial/tabs/`
+        data["intro"]=`${tutDir}intro.hbs`
+        data["interface"]=`${tutDir}interface.hbs`
+        data["ancestry"]=`${tutDir}ancestry.hbs`
+        data["background"]=`${tutDir}background.hbs`
+        data["classSheet"]=`${tutDir}classSheet.hbs`
+        data["scores"]=`${tutDir}scores.hbs`
+        data["misc"]=`${tutDir}misc.hbs`
+        data["profs"]=`${tutDir}profs.hbs`
+        data["feats"]=`${tutDir}feats.hbs`
+        data["spells"]=`${tutDir}spells.hbs`
+        data["bio"]=`${tutDir}bio.hbs`
+        data["store_info"]= game.settings.get(mod,'storeVerbage')
         return data;
     }
     activateListeners($html) {
-        $html.find(".sheet-navigation").on("click",event=>{
-        var active = $html.find(".sheet-navigation .item.active"),
-            coord = active.attr("data-coord").split(","),
-            $app = $html.closest(".app.creation-tutorial")
-
-            $html.find(".tut-head").html(active.attr("title"))
-            this.charTabs.activate(active.attr("data-parent-tab"))
-            $app.css({"width": coord[2], "height":coord[3]})
-            $app.offset({ top: coord[0], left: coord[1] })
-       })
-       
-       $html.find(".next").on("click",event=>{
-        var active = $html.find(".sheet-navigation .item.active"),
-            active = active.next(".item"),
-            coord = active.attr("data-coord").split(","),
-            $app = $html.closest(".app.creation-tutorial");
-
+            $html.find(".sheet-navigation").on("click",event=>{
+            var active = $html.find(".sheet-navigation .item.active");
+            this.move_windows($html,active);
+           })
+           
+           $html.find(".next").on("click",event=>{
+            var active = $html.find(".sheet-navigation .item.active"),
+                tabName = active.attr("data-tab");
+                if ($(event.currentTarget).hasClass("section") && ($html.find(`.tab.${tabName} .mainsection`).is(":visible")) ) {
+                        $html.find(`.tab.${tabName} .mainsection`).hide();
+                        $html.find(`.tab.${tabName} .subsection`).show();
+                        this.highlight($html,active);
+                } 
+                else {
+                    $html.find(`.tab.${tabName} .mainsection`).show();
+                    $html.find(`.tab.${tabName} .subsection`).hide();
+                    var active = $html.find(".sheet-navigation .item.active"),
+                    active = active.next(".item");
+                    this.move_windows($html,active);
+                    tabName = active.attr("data-tab");
+                    $html.find(`.tab.${tabName} .mainsection`).show();
+                    $html.find(`.tab.${tabName} .subsection`).hide();
+                }
+           })
+    }
+    move_windows($html, active){
+        var coord = active.attr("data-coord").split(","),
+            $app = $html.closest(".app.creation-tutorial"),
+            heading = '';
+            
             $html.find(".tut-head").html(active.attr("title"))
             this.charTabs.activate(active.attr("data-parent-tab"))
             $app.css({"width": coord[2], "height":coord[3]})
             $app.offset({ top: coord[0], left: coord[1] })
             this.tutTabs.activate(active.attr("data-tab"))
-            console.debug(["click",active.html(), this.tutTabs])
 
-       })
+            this.highlight($html,active);
+    }
+    highlight($html,active){
+        this.charSheet.find(".pc h3").removeClass("highlight");
+        var highlight = false;
+        switch(active.attr("data-tab")) {
+            case "ancestry":
+              if ($html.find(`.tab.${active.attr("data-tab")} .mainsection`).is(":visible"))
+                    highlight=".pc_ancestry h3";
+              else  highlight=".pc_heritage h3";
+              break;
+            case "background":
+                highlight=".pc_background h3";
+              break;
+            case "classSheet":
+                highlight=".pc_class h3";
+              break;  
+          }
+          if (highlight) this.charSheet.find(highlight).addClass("highlight");
     }
     async _initialize() {
-        this.render();
+        this.render();  
     }
     async openForActor(app, html, data) {
         this.actorId = data.actor._id
@@ -93,28 +127,159 @@ class tutorial extends Application {
         this.parentHtml = html
         this.parentData = data
         this.parentAppId = app.id
-        var charSheet = this.parentHtml.closest(`#${this.parentAppId}`);
-        charSheet.css({top: 0, left: 0});
+        this.charSheet = this.parentHtml.closest(`#${this.parentAppId}`);
+        this.charSheet.css({top: 0, left: 0});
         this.charTabs = app._tabs[0]
         this.tutTabs = this._tabs[0]
         this.render(true);
     }
+    closex (){
+        this.charSheet.find(".pc h3").removeClass("highlight")
+        this.close()
+    }
+}
+async function delChar(id){
+        let d = new Dialog({
+            title: "Delete Character?",
+            content: "Are you sure, Deletion is permanent",
+            buttons: {
+                yes: {
+                icon: '<i class="fas fa-check"></i>',
+                label: "Yes",
+                callback: async () => { await Actor.deleteDocuments([id]);}
+                },
+                no: {
+                icon: '<i class="fas fa-times"></i>',
+                label: "No"
+                }
+            },
+            default: "no"
+        });
+        await d.render(true);
+}
+async function enterHTMLimage(actor,html){
+    var spellbooks = html.find('.sheet-content').find(".spellcasting").find(".spellcasting-entry")
+    var query = $(".dialog").find(".dialog-content")//.find(".delete-all-spellcasting-dialog")
+    if (spellbooks.length !== 0 && query.length == 0){
+
+        var content = await renderTemplate("systems/pf2e/templates/actors/delete-spellcasting-dialog.hbs");
+        var content = await renderTemplate(`modules/${mod}/templates/actors/delete-spellcasting-dialog.hbs`)
+        let d = new Dialog({
+            title: "Delete All SpellBook?",
+            content: content,
+            buttons: {
+                yes: {
+                icon: '<i class="fas fa-check"></i>',
+                label: "Yes",
+                callback: async () => {await removeAllSpells(actor) }
+                },
+                no: {
+                icon: '<i class="fas fa-times"></i>',
+                label: "No",
+                callback: () => console.log(`${mod} - all spellbooks retained`)
+                }
+            },
+            default: "no"
+        });
+        await d.render(true);
+    }
 }
 
-
+Hooks.on('rendertutorial', (app, html, data) => {
+    app.tutTabs.activate("info")
+});
+Hooks.on('closetutorial', (app, html, data) => {
+    app.charSheet.find(".pc h3").removeClass("highlight");
+});
 Hooks.once( "init", function() {
     loadHandleBarTemplates();
 });
-function tutorial_button(app, html, data){
+var sidebar;
+Hooks.on('pf2e.systemReady', async () => {
+    
+    if (!game.user.isTrusted && game.settings.get(mod,'charOnly') ) {
+        $(`[data-tab="combat"]`).hide()
+        $(`[data-tab="items"]`).hide()
+        $(`[data-tab="cards"]`).hide()
+        $(`[data-tab="playlists"]`).hide()
+        $(`[data-tab="actors"]`).hide()
+        $(`[data-tab="tables"]`).hide()
+        $(`[data-tab="journal"]`).hide()
+        $(`[data-tab="compendium"]`).hide()
+        $(`[data-tab="Collapse or Expand"]`).hide()
+        $(`#ui-right a.collapse`).hide()
+        $(`#ui-bottom`).hide()
+        $(`#pause.paused`).hide()
+        sidebar.collapse()
+    }
+    
+}) 
+Hooks.on('collapseSidebar', async () => {
+    
+    if (!game.user.isTrusted && game.settings.get(mod,'charOnly') ) {
+        $(`nav#controls`).hide()
+    }
+    
+}) 
+Hooks.on( "renderSidebar", function(app) {sidebar = app});
+
+async function tutorial_button(app, html, data){
     if (app.actor.type === 'npc') return;
-    if (tutorialInstance === undefined) tutorialInstance = new tutorial(); else return;
+    if (html.find(".window-header").length != 1) return;
     if (html.find(".tutorial-drawer").length != 0) return;
+
+    var id = app.actor.id;
+    if (tutorialInstance[id] === undefined) tutorialInstance[id] = new tutorial(id);
+
+    html.closest('.app').find("div .image-container").click(ev=>{
+        enterHTMLimage(app.actor)
+    })
+
+    //let delBtn = $(`<a class="del-button"><i class="fas fa-trash"></i>Delete</a>`);
+    //delBtn.click(ev => { delChar(id) });
+    //delBtn.insertAfter(openBtn);
+
+
+
     let openBtn = $(`<a class="tutorial-drawer"><i class="fas fa-layer-group"></i> Creation Tutorial</a>`);
-    openBtn.click(ev => { tutorialInstance.openForActor(app, html, data) });
+    openBtn.click(ev => { tutorialInstance[id].openForActor(app, html, data) });
     let titleElement = html.closest('.app').find('.window-title');
     openBtn.insertAfter(titleElement);
+    
+    if (data.actor.ownership.default != 0 && !game.user.isTrusted ){ //add condition on setting check mark for allow creation of characters
+        const updates = [{_id: id, "ownership.default": 0}];
+        const updated = await Actor.updateDocuments(updates);
+    }
 };
 Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
     tutorial_button(app, html, data);
 });
-let tutorialInstance;
+Hooks.on('renderAbilityBuilderPopup', (app, html) => {
+    ///currently working here
+   console.debug(["exist",$("#tutorial-module-s20JinsJUopQTiCv").length]);
+   if ($("#tutorial-module-s20JinsJUopQTiCv").length){
+        var tutWin=$("#tutorial-module-s20JinsJUopQTiCv")
+        html.offset({ top: 316, left: 0 })
+        tutWin.find(`.tab.scores .mainsection`).hide();
+        tutWin.find(`.tab.scores .subsection`).show();
+   }
+});
+Hooks.on('renderDialog', (app, html, data) => {
+    if (app.title == "Create New Actor")
+        if (!game.user.isTrusted )
+            html.find('.form-group').eq(1).find('option').not(':selected').remove()
+    
+});
+//Character environment features
+
+
+let tutorialInstance = [];
+
+//todo 
+//add image dialog to add url image to token
+//Finish landscape library
+//correct css issuse with mods added
+   //journal has two background, make internal transpanrent
+   //text color in some area not visible
+//macro to save settings and give a name to it
+//macro not visible to users
