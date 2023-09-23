@@ -391,7 +391,7 @@ function compendiumSpellModifications(modifications, modify){
             }
         }
     })
-    return (modify)?"Data has been + added":"Data has been - reset";
+    return (modify)?"Wizard Generator has been added":"Wizard Generator has been removed";
 }
 function process_direct_commands(originRules, entry, modify){
     var rules = false;
@@ -472,9 +472,13 @@ function createLine(label, val, rootSuffix ){
 }
 async function processEachSpellBook(data){
     var actor = game.actors.get(data.actor._id)
-    var spellSets = actor.spellcasting.templates
-    if (spellSets !== undefined ) await cycleThruCollectedSpellBooks(collectSpellBooks(spellSets, actor), actor)
-    addSpellsGrantedToClericFromDeity(actor)
+    if (actor.spellcasting.templates !=undefined){
+        var spellSets = actor.spellcasting.templates
+        if (spellSets !== undefined ) await cycleThruCollectedSpellBooks(collectSpellBooks(spellSets, actor), actor)
+        addSpellsGrantedToClericFromDeity(actor)
+    }
+    else ui.notifications.info("There are no registered spellbooks for your character's class");
+
 }
 function collectSpellBooks(spellSets, actor){
     var entries = [],  pass=0, morePasses = false, info;
@@ -658,6 +662,7 @@ async function addSpellsGrantedToClericFromDeity(actor){
 //==========================
 export class Settings {
     static registerSettings() {
+        /*
         game.settings.registerMenu(mod, "settingsMenu", {
             name: "Configuration",
             label: "Modifications",
@@ -665,16 +670,46 @@ export class Settings {
             type: AddRemoveConfig,
             restricted: true,
         });
+        */
         game.settings.register(mod, 'isCompiled', {
-            name: 'Compiled info indicator',
-            hint: 'Indicator the info has been compiled',
+            name: 'Add Spell Generator Wizard',
+            //hint: 'Indicator the info has been compiled',
             scope: 'world',     // "world" = sync to db, "client" = local storage
-            config: false,       // false if you dont want it to show in module config
+            config: true,       // false if you dont want it to show in module config
+            type: Boolean,       // Number, Boolean, String, Object
+            default: false,
+            onChange: value => { // value is the new value of the setting
+                this.updateSpellCompendiums(value);
+            }
+        });
+        game.settings.register(mod, 'charOnly', {
+            name: 'Session 0 Environment',
+            hint: 'Foundry interface focus on creating characters, removing non essentials display items',
+            scope: 'world',     // "world" = sync to db, "client" = local storage
+            config: true,       // false if you dont want it to show in module config
             type: Boolean,       // Number, Boolean, String, Object
             default: false
-          });
+        });
+        game.settings.register(mod, 'storeVerbage', {
+            name: 'Store location description',
+            hint: 'Fill with verbiage to describe store in Canvas, leave blank if not available',
+            scope: 'world',     // "world" = sync to db, "client" = local storage
+            config: true,       // false if you dont want it to show in module config
+            type: String,       // Number, Boolean, String, Object
+            default: "",
+            onChange: value => { // value is the new value of the setting
+                console.debug(["hello veribale"])
+            }
+        });
     }
+    static updateSpellCompendiums(isSubmit) {
+        var db = "pf2e-char-builder.addons";
+        var msg = compendiumSpellModifications(game.packs.get(db), isSubmit);
+        ui.notifications.info(msg);
+    }
+
 }
+
 // Edit functions
 class AddRemoveConfig extends FormApplication {
     static get defaultOptions() {
@@ -713,6 +748,8 @@ function add_spellcaster_generator(app,html,data){
         processEachSpellBook(data);
         return;
     })
+    //for diagnostic use only
+    /*
     var feat_html = $('<a class="item-control blue-button" data-action="spellcasting-generate" title="Set Feats" data-type="feats" data-level="" style="width: 100px;"><i class="fas fa-cogs"></i>Set Feats</a>');
     new_html.after(feat_html)
     feat_html.on("click", async event=>{
@@ -722,6 +759,7 @@ function add_spellcaster_generator(app,html,data){
         //getClassSpellSlots(game.actors.get(data.actor._id))
         return;
     })
+    */
 }
 async function checkifClassDeletedToRemoveSpells(actor,html){
     var spellbooks = html.find('.sheet-content').find(".spellcasting").find(".spellcasting-entry")
@@ -765,12 +803,13 @@ Hooks.once( "init", function() {
     Settings.registerSettings();
 });
 Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
-    actor = game.actors.get(data.actor._id);
-    if((data.class !== null) && (data.ancestry !== null) && (data.background !== null) && (data.heritage !== null)){
-        add_spellcaster_generator(app,html,data)
-    }   
-    checkForDeityDomainFeats(actor); 
-    var pcClass = html.find(".pc_class");
+    if (game.settings.get(mod,'isCompiled')){
+        actor = game.actors.get(data.actor._id);
+        if((data.class !== null) && (data.ancestry !== null) && (data.background !== null) && (data.heritage !== null)){
+            add_spellcaster_generator(app,html,data)
+        }   
+        checkForDeityDomainFeats(actor); 
+    }
 });
 Hooks.on('dropActorSheetData', async (actor, actorSheet, data) => {
     await removeAllSpells(actor) 

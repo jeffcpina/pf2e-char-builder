@@ -21,8 +21,7 @@
   "esmodules": [
     "scripts/module.mjs",
     "scripts/spellbuilder.mjs",
-    "scripts/tutorial.mjs",
-    "scripts/scoredrawer.mjs"
+    "scripts/tutorial.mjs"
   ],
   "styles": [
     "styles/module.css"
