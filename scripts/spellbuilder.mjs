@@ -371,8 +371,12 @@ function createEmptySpellcastingEntry(actor) {
 var rootPath = "spellcasting.templates", builtRules = [], spellEntries=[];
 //add choice set to Bloodline:Genie feat Compendium.pf2e.classfeatures.tYOMBiH3HbViNWwn
 //add choice set to Eiodolon feat Compendium.pf2e.classfeatures.qOEpe596B0UjhcG0
-function compendiumSpellModifications(modifications, modify){
+async function compendiumSpellModifications(modifications, modify){
     console.debug([`${mod} - modifying feat modification for spells`,modifications, modify])
+    classFeats = game.packs.get("pf2e.classfeatures")
+    console.debug(["compendium",classFeats,classFeats.locked])
+    await classFeats.configure({locked:false})
+    if (classFeats.locked) return "***  Could not unlock Class Features ***"
     modifications.index.forEach( async modIdx => {
         var compendium = await modifications.getDocument(modIdx._id)
         var classRules = compendium.system.rules, featRules=[]
@@ -391,6 +395,7 @@ function compendiumSpellModifications(modifications, modify){
             }
         }
     })
+    await classFeats.configure({locked:true})
     return (modify)?"Wizard Generator has been added":"Wizard Generator has been removed";
 }
 function process_direct_commands(originRules, entry, modify){
@@ -753,13 +758,13 @@ function add_spellcaster_generator(app,html,data){
     var feat_html = $('<a class="item-control blue-button" data-action="spellcasting-generate" title="Set Feats" data-type="feats" data-level="" style="width: 100px;"><i class="fas fa-cogs"></i>Set Feats</a>');
     new_html.after(feat_html)
     feat_html.on("click", async event=>{
-        var db = "world.jeff-tests", isSubmit = false
-        actor = game.actors.get(data.actor._id)
-        checkifClassDeletedToRemoveSpells(actor,html)
+        //var db = "world.jeff-tests", isSubmit = false
+        //actor = game.actors.get(data.actor._id)
+        //checkifClassDeletedToRemoveSpells(actor,html)
         //getClassSpellSlots(game.actors.get(data.actor._id))
         return;
     })
-    */
+    //*/
 }
 async function checkifClassDeletedToRemoveSpells(actor,html){
     var spellbooks = html.find('.sheet-content').find(".spellcasting").find(".spellcasting-entry")

@@ -267,8 +267,7 @@ Hooks.on('renderAbilityBuilderPopup', (app, html) => {
 Hooks.on('renderDialog', (app, html, data) => {
     if (app.title == "Create New Actor")
         if (!game.user.isTrusted )
-            html.find('.form-group').eq(1).find('option').not(':selected').remove()
-    
+            html.find('.form-group').eq(1).find('option').not(':selected').remove() 
 });
 //Character environment features
 
