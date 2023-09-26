@@ -10,7 +10,7 @@
           "url": "https://github.com/jeffcpina/pf2e-char-builder"
       }
   ],
-  "version": "0.8.11",
+  "version": "0.8.2",
   "library": "false",
   "manifestPlusVersion": "1.2.0",
   "compatibility": {
@@ -62,8 +62,8 @@
       "flags": {}
     }
   ],
-  "download": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.8.11/pf2e-char-builder.zip",
-  "manifest": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.8.11/module.json",
+  "download": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.8.2/pf2e-char-builder.zip",
+  "manifest": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.8.2/module.json",
   "license": "MIT",
   "readme": "README.md",
   "url": "https://github.com/jeffcpina/pf2e-char-builder"
