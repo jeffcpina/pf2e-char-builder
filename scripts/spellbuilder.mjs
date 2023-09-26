@@ -368,22 +368,23 @@ function createEmptySpellcastingEntry(actor) {
         actor
     })
 }
+/******** End of Mirror of PF2e code *****/
+
+/******** Start of Feats Modifications *****/
 var rootPath = "spellcasting.templates", builtRules = [], spellEntries=[];
 //add choice set to Bloodline:Genie feat Compendium.pf2e.classfeatures.tYOMBiH3HbViNWwn
 //add choice set to Eiodolon feat Compendium.pf2e.classfeatures.qOEpe596B0UjhcG0
 async function compendiumSpellModifications(modifications, modify){
     console.debug([`${mod} - modifying feat modification for spells`,modifications, modify])
-    classFeats = game.packs.get("pf2e.classfeatures")
-    console.debug(["compendium",classFeats,classFeats.locked])
-    await classFeats.configure({locked:false})
-    if (classFeats.locked) return "***  Could not unlock Class Features ***"
-    modifications.index.forEach( async modIdx => {
+    for (let modIdx of modifications.index){
+    //modifications.index.forEach( async modIdx => {
         var compendium = await modifications.getDocument(modIdx._id)
         var classRules = compendium.system.rules, featRules=[]
         var isSpell = (classRules[0].label != "direct_tx") 
         if (isSpell) classRules.forEach(feat=>{featRules.push(feat.value)})
             else featRules = compendium.system.rules
         for (let entry of featRules){
+            if (entry == undefined) continue
             var id = entry.id, id=id.split("."), db=`${id[1]}.${id[2]}`;
             var feat = await game.packs.get(db).getDocument(id[3]), originRules = feat.system.rules
             var rules = (isSpell) ? process_spell_commands(originRules,entry, modify)
@@ -394,8 +395,7 @@ async function compendiumSpellModifications(modifications, modify){
                 console.debug([id[3], feat.name, rules, `${descript}: ${rules.length}`]  );
             }
         }
-    })
-    await classFeats.configure({locked:true})
+    }
     return (modify)?"Wizard Generator has been added":"Wizard Generator has been removed";
 }
 function process_direct_commands(originRules, entry, modify){
@@ -475,6 +475,9 @@ function createLine(label, val, rootSuffix ){
     builtRules.push(obj)
     return obj
 }
+/******** End of Feats Modifications *****/
+
+/******** Start of spellbook Creation *****/
 async function processEachSpellBook(data){
     var actor = game.actors.get(data.actor._id)
     if (actor.spellcasting.templates !=undefined){
@@ -662,6 +665,8 @@ async function addSpellsGrantedToClericFromDeity(actor){
        }
    }
 }
+/******** End of spellbook Creation *****/
+
 //==========================
 // Settings utilities
 //==========================
@@ -707,10 +712,15 @@ export class Settings {
             }
         });
     }
-    static updateSpellCompendiums(isSubmit) {
+    static async updateSpellCompendiums(isSubmit) {
         var db = "pf2e-char-builder.addons";
-        var msg = compendiumSpellModifications(game.packs.get(db), isSubmit);
+        var classFeats = game.packs.get("pf2e.classfeatures")
+        await classFeats.configure({locked:false})
+        if (classFeats.locked) ui.notifications.info("***  Could not unlock Class Features ***")
+        ui.notifications.info("*** Modifying Class Features ***")
+        var msg = await compendiumSpellModifications(game.packs.get(db), isSubmit);
         ui.notifications.info(msg);
+        await classFeats.configure({locked:true})
     }
 
 }
@@ -736,7 +746,7 @@ class AddRemoveConfig extends FormApplication {
         const isSubmit = (event.submitter.id=="submit") 
         var db = "pf2e-char-builder.addons";
         //var db = "world.jeff-tests";
-        var msg = compendiumSpellModifications(game.packs.get(db), isSubmit);
+        var msg = await compendiumSpellModifications(game.packs.get(db), isSubmit);
         ui.notifications.info(msg);
         game.settings.set(mod,'isCompiled',!isSubmit)
     }
