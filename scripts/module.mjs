@@ -1,4 +1,4 @@
-console.debug("PF2e System | Jefffrey Custom Module| Started "); 
+console.debug("PF2e System | PF2e Character Builder | Started "); 
 export const modName = "PF2e Character Builder";
 const mod = "pf2e-char-builder";
 var _domParser = new WeakMap;
