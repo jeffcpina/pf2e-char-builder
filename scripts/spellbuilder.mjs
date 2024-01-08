@@ -818,9 +818,11 @@ Hooks.once( "init", function() {
     Settings.registerSettings();
 });
 Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
+    console.debug(["isCompiled",game.settings.get(mod,'isCompiled')])
     if (game.settings.get(mod,'isCompiled')){
         actor = game.actors.get(data.actor._id);
         if((data.class !== null) && (data.ancestry !== null) && (data.background !== null) && (data.heritage !== null)){
+            console.debug("generator")
             add_spellcaster_generator(app,html,data)
         }   
         checkForDeityDomainFeats(actor); 

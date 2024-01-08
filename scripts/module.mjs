@@ -30,269 +30,9 @@ var __defProp2 = Object.defineProperty,
             }, 
             "__privateAdd"
     )
-class CompendiumBrowserTab1 {
-    constructor(browser) {
-        __publicField(this, "browser"), __publicField(this, "indexData", []), __publicField(this, "isInitialized", !1), __publicField(this, "totalItemCount", 0), 
-        __publicField(this, "scrollLimit", 100), __privateAdd(this, _domParser, new DOMParser), __publicField(this, "searchFields", []), 
-        __publicField(this, "storeFields", []), this.browser = browser;
-    }
-    async renderResults(start) {
-        if (!this.templatePath) throw ErrorPF2e(`Tab "${this.tabName}" has no valid template path.`);
-        const indexData = this.getIndexData(start),
-            liElements = [];
-        for (const entry of indexData) {
-            const htmlString = await renderTemplate(this.templatePath, {
-                    entry,
-                    filterData: this.filterData
-                }),
-                html = __privateGet(this, _domParser).parseFromString(htmlString, "text/html");
-            liElements.push(html.body.firstElementChild)
-        }
-        return liElements
-    }
-}
-class CompendiumBrowserHeritageTab extends CompendiumBrowserTab1{
-    constructor(browser) {
-        super(browser),
-        __publicField(this, "tabName", "heritage"),
-        __publicField(this, "filterData"),
-        __publicField(this, "templatePath", `modules/${mod}/templates/compendium-browser/partials/heritage.hbs`),
-        __publicField(this, "searchFields", ["name"]),
-        __publicField(this, "storeFields", ["type", "name", "img", "uuid", "traits", "source"]),
-        __publicField(this, "index", ["img", "system.heritageType.value", "system.traits.value", "system.source.value"]),
-        this.filterData = this.prepareFilterData()
-    }
-    async loadData() {
-        console.debug("PF2e System | Compendium Browser | Started loading heritages");
-        const heritages = []
-          , indexFields = ["img", "system.traits.value", "system.source.value", "system.ancestry.name"]
-          , ancestries = new Set //added by jcp
-          , sources = new Set;
-        for await(const {pack, index} of this.browser.packLoader.loadPacks("Item", this.browser.loadedPacks("heritage"), indexFields)) {
-            console.debug(`PF2e System | Compendium Browser | ${pack.metadata.label} - Loading`);
-            for (const heritageData of index)
-                
-                if (heritageData.type === "heritage") {
-                    if (heritageData.system.ancestry === undefined) heritageData.system.ancestry = {name: "Versatile"};
-                    if (!this.hasAllIndexFields(heritageData, indexFields)) {
-                        console.warn(`Heritage '${heritageData.name}' does not have all required data fields. Consider unselecting pack '${pack.metadata.label}' in the compendium browser settings.`);
-                        continue
-                    }
-                    
-                    const source = heritageData.system.source.value;
-                    var ancestry = heritageData.system.ancestry.name;
-                    ancestry = ancestry.toLowerCase();
 
-                    ancestry && ancestries.add(ancestry), 
-                    source && (sources.add(source),
-                    heritageData.system.source.value = game.pf2e.system.sluggify(source)),
-                    heritages.push({
-                        type: heritageData.type,
-                        name: heritageData.name,
-                        img: heritageData.img,
-                        uuid: `Compendium.${pack.collection}.${heritageData._id}`,
-                        traits: heritageData.system.traits.value,
-                        ancestry: ancestry,
-                        source: source
-                    })
-                }   
-        }
-        this.indexData = heritages,
-        this.filterData.checkboxes.ancestry.options = this.generateSourceCheckboxOptions(ancestries),
-        this.filterData.checkboxes.source.options = this.generateSourceCheckboxOptions(sources),
-        console.debug("PF2e System | Compendium Browser | Finished loading heritages")
-    }
-    filterIndexData(entry) {
-        const {checkboxes, 
-              // multiselects
-        } = this.filterData;
-        return !( 
-                  checkboxes.ancestry.selected.length && 
-                  !checkboxes.ancestry.selected.includes(entry.ancestry) 
-        )
-    }
-    prepareFilterData() {
-        return {
-            checkboxes: {
-                ancestry: {
-                    isExpanded: !1,
-                    label: "Ancestry",
-                    options: {},
-                    selected: []
-                },
-                source: {
-                    isExpanded: !1,
-                    label: "PF2E.BrowserFilterSource",
-                    options: {},
-                    selected: []
-                }
-            },
-            order: {
-                by: "name",
-                direction: "asc",
-                options: {
-                    name: "PF2E.BrowserSortyByNameLabel"
-                }
-            },
-            search: {
-                text: ""
-            }
-        }
-    }
-}
-class CompendiumBrowserDeityTab extends CompendiumBrowserTab1{
-    constructor(browser) {
-        super(browser),
-        __publicField(this, "tabName", "deity"),
-        __publicField(this, "filterData"),
-        __publicField(this, "templatePath", `modules/${mod}/templates/compendium-browser/partials/deity.hbs`),
-        __publicField(this, "searchFields", ["name"]),
-        __publicField(this, "storeFields", ["type", "name", "img", "uuid", "traits", "source"]),
-        __publicField(this, "index", ["img", "system.category", "system.source.value", "system.weapons", "system.domains"]),
-        this.filterData = this.prepareFilterData()
-    }
-    async loadData() {
-        console.debug("PF2e System | Compendium Browser | Started loading deities");
-        const deities = []
-          , indexFields = ["img", "system.category", "system.source.value", "system.alignment", "system.weapons", "system.domains"]
-          , categories = new Set //added by jcp
-          , sources = new Set, alignmentList = CONFIG.PF2E.alignments
-        for await(const {pack, index} of this.browser.packLoader.loadPacks("Item", this.browser.loadedPacks("deity"), indexFields)) {
-            console.debug(`PF2e System | Compendium Browser | ${pack.metadata.label} - Loading`);
-            for (const deityData of index)
-                if (deityData.type === "deity") {
-                    if (!this.hasAllIndexFields(deityData, indexFields)) {
-                        console.warn(`Deity '${deityData.name}' does not have all required data fields. Consider unselecting pack '${pack.metadata.label}' in the compendium browser settings.`);
-                        continue
-                    }
-                    const source = deityData.system.source.value;
-                    const category = deityData.system.category;
-                    const alignment = game.i18n.localize(alignmentList[deityData.system.alignment.own])
-                    
-                    category && categories.add(category), 
-                    source && (sources.add(source),
+/*** end of pf2e functions */
 
-                    deityData.system.source.value = game.pf2e.system.sluggify(source)),
-                    deities.push({
-                        type: deityData.type,
-                        name: deityData.name,
-                        img: deityData.img,
-                        uuid: `Compendium.${pack.collection}.${deityData._id}`,
-                        category: category,
-                        alignments: deityData.system.alignment.follower,
-                        alignment: alignment,
-                        weapons: deityData.system.weapons,
-                        domains: deityData.system.domains.primary,
-                        source: source
-                    })
-                }   
-        }
-        var domainList=[], newArray = Object.entries(CONFIG.PF2E.deityDomains);
-        newArray.map((val,idx)=>{var key=val[0],label=val[1].label; domainList[key]=label})
-          
-        this.indexData = deities,
-        //this.filterData.checkboxes.category.options = this.generateSourceCheckboxOptions(categories),
-        this.filterData.checkboxes.source.options = this.generateSourceCheckboxOptions(sources),
-        this.filterData.multiselects.alignments.options = this.generateMultiselectOptions(
-            {...CONFIG.PF2E.alignments}
-        ),
-        this.filterData.multiselects.weapons.options = this.generateMultiselectOptions(
-            {...CONFIG.PF2E.baseWeaponTypes}
-        ),
-        this.filterData.multiselects.domains.options = this.generateMultiselectOptions(
-            {...domainList}
-        ),
-        console.debug("PF2e System | Compendium Browser | Finished loading deities")
-    }
-    filterIndexData(entry) { 
-        const { 
-              multiselects,
-              checkboxes
-        } = this.filterData;
-
-        return !( 
-                  //checkboxes.category.selected.length && !checkboxes.category.selected.includes(entry.alignment) 
-                  !this.filterTraits(entry.alignments, multiselects.alignments.selected, multiselects.alignments.conjunction) 
-                  || !this.filterTraits(entry.weapons, multiselects.weapons.selected, multiselects.weapons.conjunction) 
-                  || !this.filterTraits(entry.domains, multiselects.domains.selected, multiselects.domains.conjunction) 
-        )
-    }
-    prepareFilterData() {
-        return {
-            checkboxes: {
-                source: {
-                    isExpanded: !1,
-                    label: "PF2E.BrowserFilterSource",
-                    options: {},
-                    selected: []
-                }
-            },
-            multiselects: {
-                alignments: {
-                    conjunction: "or",
-                    label: "PF2E.Item.Deity.FollowerAlignments",
-                    options: [],
-                    selected: []
-                },
-                weapons: {
-                    conjunction: "or",
-                    label: "PF2E.Item.Deity.FavoredWeapons.Label",
-                    options: [],
-                    selected: []
-                },
-                domains: {
-                    conjunction: "or",
-                    label: "Domains",
-                    options: [],
-                    selected: []
-                }
-            },
-            order: {
-                by: "name",
-                direction: "asc",
-                options: {
-                    name: "PF2E.BrowserSortyByNameLabel"
-                }
-            },
-            search: {
-                text: ""
-            }
-        }
-    }
-}
-
-/*** end of classes */
-
-function attach_compendium_tab(compendium){
-        //reset parent of Compendium with embedded CompendiumBrowserTab
-        var gparent = Object.getPrototypeOf(Object.getPrototypeOf(compendium))
-        var browser_parent = Object.getPrototypeOf(game.pf2e.compendiumBrowser.tabs.action);
-        Object.setPrototypeOf(gparent, browser_parent); 
-}
-function setHeritage(app){
-    if (! (app.dataTabsList.indexOf("heritage") >= 0) ) {
-        var new_compendiumBrowser = new CompendiumBrowserHeritageTab(game.pf2e.compendiumBrowser);    
-        attach_compendium_tab(new_compendiumBrowser)
-        app.tabs["heritage"] = new_compendiumBrowser;
-        app.settings.heritage = { "pf2e.heritages" : {
-            load: true,
-            name: "Heritage"
-        }}
-        app.dataTabsList.push("heritage");
-    }   
-}
-function setDeity(app){
-    if (! (app.dataTabsList.indexOf("deity") >= 0) ) {
-        var new_compendiumBrowser = new CompendiumBrowserDeityTab(game.pf2e.compendiumBrowser);    
-        attach_compendium_tab(new_compendiumBrowser)
-        app.tabs["deity"] = new_compendiumBrowser;
-        app.settings.deity = { "pf2e.deities" : {
-            load: true,
-            name: "Deity"
-        }}
-        app.dataTabsList.push("deity");
-    }   
-}
 function add_deity_link_to_actor_sheet(html){
     
     var el = html.find('.sheet-content').find('.character-details').find(".pc_deity ").find(".open-compendium");
@@ -383,23 +123,6 @@ async function add_spell_counter_to_prep_sheet(html,limit,spellcount){
 // Hooks
 //==========================
 
-function changeDefaultTemplate(newTemplate){
-    this.options.template = newTemplate;
-    return this.options;
-}
-Hooks.on('pf2e.systemReady', async () => {
-    var compendiumBrowser = game.pf2e.compendiumBrowser;
-    compendiumBrowser.changeDefaultTemplate = changeDefaultTemplate;
-    compendiumBrowser.changeDefaultTemplate(`modules/${mod}/templates/compendium-browser/compendium-browser.hbs`);
-    setHeritage(compendiumBrowser)
-    setDeity(compendiumBrowser)
-}); 
-Hooks.on('renderCompendiumBrowser', async (app, html, data) => {
-    var el = html.find('.spell-browser').find('.control-area').find('.filtercontainer[data-filter-name="domains"]');
-    var new_html = '<p>&nbsp</p><p><strong>Cleric bonus based on deity chosen:</strong></p><ul><li>Cloister Cleric get bonus spells with domain</li><li>War Priest gets bonuses with the favored weapon</li></ul>'
-    el.after(new_html);
-
-})
 Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
     add_deity_link_to_actor_sheet(html)
     add_heritage_link_to_actor_sheet(html);
@@ -603,9 +326,11 @@ Hooks.on('renderSpellPreparationSheet', async (app,html,data) => {
     add_spell_counter_to_prep_sheet(html,limit, spellcount)
 }) 
 Hooks.on('renderCompendium', (app, html, data) => {
+    //hover over functionality on compendium folders
     if (app.collection.metadata.path == "systems/pf2e/packs/classes.db" || app.collection.metadata.path == "systems/pf2e/packs/ancestries.db") {
         var links = html.closest('.app').find('.document-name a');
         var desc = [];
+        //classes
         desc["Barbarian"] =`Barbarians are often built as brutish, front-line fighters, making them a perfect choice for players who love to get into the thick of battle. They can summon their rage as an ability to get buffs and special powers`
         desc["Alchemist"] = "Uncontested masters of alchemical items, alchemists can create free, high-level alchemical items using a daily pool of Infused Reagents, allowing them to create powerful items like bombs, mutagens, and poisons which would normally be too expensive or impractical to use, and use them either offensively or to empower the party."
         desc["Bard"] = `Bards are extremely versatile, they get all the skills, good spells, and are pretty decent in combat. You’ll often find yourself not being the best for any particular role, but great at fulfilling any role that’s needed.`
@@ -630,7 +355,7 @@ Hooks.on('renderCompendium', (app, html, data) => {
         desc["Wizard"] = `Wizards are the classic spellcaster class, appealing to players who appreciate the sheer power potential of magic in Pathfinder. They are studious mages who can pull an answer to anything out of their spellbook, given enough time and preparation.`
         desc["Kineticist"] = `Masters of the elements, the Kineticist channels elemental power in a variety of ways. Depending on your choices of elements and Impulses, Kineticists can play very differently, ranging from durable Defender builds to high-damage Blaster builds. While their capabilities often feel like spells, they have neither spell slots nor Focus Points to worry about, allowing them to use their abilities freely without rest.`
 
-
+        //ancestries
         desc['Anadi'] = `Anadi people are reclusive, sapient spiders who hail from the jungles of southern Garund.`
         desc['Android'] = `Technological wonders from another world, androids have synthetic bodies and living souls.`
         desc['Automaton']  = `Automatons are immortal constructs infused with living souls who often believe they serve a grand purpose.`
@@ -712,3 +437,4 @@ Hooks.on("init", (documentTypes) => {
 //todo
 //add player core rules
 //remove sections and menu on tutorial front sheet
+//remove journal customizations
