@@ -82,6 +82,9 @@ button.apply_stats {
 .tutorial.sheet .sheet-navigation a {
     padding: 5px 7px;
 }
+.tutorial.sheet .sheet-navigation a.active {
+    color: orange;
+}
 .tutorialx.sheet h1 {
     width: 520px
 }
@@ -257,7 +260,7 @@ a.show-video {
 a.show-video i{
     color: black;
 }
-div.pc span h3.highlight, button.highlight{
+div.pc h3.highlight, button.highlight{
     animation: glow 0.5s infinite alternate;
 }
 div.subsection{
@@ -275,4 +278,7 @@ span.glowing {
     padding: 5px 10px;
     animation: glow 0.5s infinite alternate;
     margin: 0px 10px;
+}
+.actor.sheet .crb-style section.major > header button.has-unallocated.unhighlight{
+    animation: none !important;
 }

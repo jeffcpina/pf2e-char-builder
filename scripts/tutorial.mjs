@@ -2,7 +2,6 @@ console.debug("PF2e System | PF2e Character Builder - Tutorial | Started ");
 export const modName = "PF2e Character Builder";
 const mod = "pf2e-char-builder";
 
-
 async function loadHandleBarTemplates()
 {
   // register templates parts
@@ -23,6 +22,7 @@ async function loadHandleBarTemplates()
     return loadTemplates( templatePaths );
 }
 class tutorial extends Application {
+    resource = false;
     constructor(actor_id) {
         super();
         this.options.id = `tutorial-module-${actor_id}`;
@@ -74,6 +74,7 @@ class tutorial extends Application {
                         $html.find(`.tab.${tabName} .mainsection`).hide();
                         $html.find(`.tab.${tabName} .subsection`).show();
                         this.highlight($html,active);
+                        this.manageResource($html,active);
                 } 
                 else {
                     $html.find(`.tab.${tabName} .mainsection`).show();
@@ -99,24 +100,98 @@ class tutorial extends Application {
             this.tutTabs.activate(active.attr("data-tab"))
 
             this.highlight($html,active);
+            this.manageResource($html,active);
     }
     highlight($html,active){
         this.charSheet.find(".pc h3").removeClass("highlight");
+        var editattr = this.charSheet.find("button.has-unallocated");
+        if (! editattr.hasClass("unhighlight")) editattr.addClass("unhighlight")
         var highlight = false;
         switch(active.attr("data-tab")) {
             case "ancestry":
               if ($html.find(`.tab.${active.attr("data-tab")} .mainsection`).is(":visible"))
-                    highlight=".pc_ancestry h3";
-              else  highlight=".pc_heritage h3";
+                    highlight=".ancestry h3";
+              else  highlight=".heritage h3";
               break;
             case "background":
-                highlight=".pc_background h3";
+                highlight=".background h3";
               break;
             case "classSheet":
-                highlight=".pc_class h3";
-              break;  
+                highlight=".class h3";
+              break;
+            case "scores":
+                editattr.removeClass("unhighlight");
+              break;    
           }
           if (highlight) this.charSheet.find(highlight).addClass("highlight");
+    }
+    async manageResource($html,active){
+        var $app = $html.closest(".app.creation-tutorial");
+        var activeTab = active.attr("data-tab")
+        if (ui.windows[this.resource] != undefined) {
+            var isheritage = $html.find(`.tab.${active.attr("data-tab")} .subsection`).is(":visible")
+            if(this.resource == 115){
+                if( !(isheritage || activeTab == "background")) ui.windows[this.resource].close()
+            }
+            else ui.windows[this.resource].close()
+        }    
+        switch(activeTab) {
+            case "ancestry":
+              if ($html.find(`.tab.${active.attr("data-tab")} .mainsection`).is(":visible")){
+                    this.resource = "pf2e.ancestries";
+                    this.resource = game.packs.get(this.resource).render(!0)
+                    $app.offset({ top: 0, left: 1108 })
+                    this.resource = 74;
+              }
+              else  {
+                    if (game.pf2e.compendiumBrowser.tabs.heritage != undefined) {
+                        var ancestry =  this.charSheet.find('.character-details').find(".ancestry").find(".value").html().toLowerCase();
+
+                        const heritageTab = game.pf2e.compendiumBrowser.tabs.heritage, 
+                        filter = await heritageTab.getFilterData();
+                        const checkboxes = filter.checkboxes.ancestry;
+            
+                        if (!ancestry) {
+                            ui.notifications.error("Must choose a valid Ancestry first");
+                            throw ErrorPF2e(`Must choose a valid Ancestry first`)
+                        }
+                        ancestry in checkboxes.options && (checkboxes.isExpanded = !1, checkboxes.options[ancestry].selected = !0, checkboxes.selected.push(ancestry));
+                        heritageTab.open(filter)
+                        $app.offset({ top: 0, left: 759 }) 
+                        this.resource = 115;
+                    }
+                    else {
+                        this.resource = "pf2e.heritages";
+                        this.resource = game.packs.get(this.resource).render(!0)
+                        $app.offset({ top: 0, left: 1108 }) 
+                        this.resource = 81;
+                    }
+              }
+              break;
+            case "background":
+                if (game.pf2e.compendiumBrowser.tabs.background != undefined) {
+                    const compendiumBrowser = game.pf2e.compendiumBrowser;
+                    const backgroundTab = game.pf2e.compendiumBrowser.tabs.background, 
+                    filter = await backgroundTab.getFilterData();
+                    backgroundTab.open(filter)
+                    $app.offset({ top: 0, left: 759 }) 
+                    this.resource = 115;
+                }
+                else {
+                    this.resource = "pf2e.backgrounds";
+                    this.resource = game.packs.get(this.resource).render(!0)
+                    $app.offset({ top: 0, left: 1108 }) 
+                    this.resource = 76;
+                }
+
+              break;
+            case "classSheet":
+                this.resource = "pf2e.classes";
+                this.resource = game.packs.get(this.resource).render(!0)
+                $app.offset({ top: 0, left: 1108 })  
+                this.resource = 77;
+              break; 
+          }
     }
     async _initialize() {
         this.render();  
@@ -128,14 +203,16 @@ class tutorial extends Application {
         this.parentData = data
         this.parentAppId = app.id
         this.charSheet = this.parentHtml.closest(`#${this.parentAppId}`);
-        this.charSheet.css({top: 0, left: 0});
+        this.parentApp.setPosition({top: 0, left: 0})
+        //this.charSheet.css({top: 0, left: 0});
         this.charTabs = app._tabs[0]
         this.tutTabs = this._tabs[0]
         this.render(true);
+        this.charTabs.activate("character")
     }
     closex (){
         this.charSheet.find(".pc h3").removeClass("highlight")
-        this.close()
+        //this.close()
     }
 }
 async function delChar(id){
@@ -254,16 +331,36 @@ async function tutorial_button(app, html, data){
 Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
     tutorial_button(app, html, data);
 });
-Hooks.on('renderAbilityBuilderPopup', (app, html) => {
-    ///currently working here
-   console.debug(["exist",$("#tutorial-module-s20JinsJUopQTiCv").length]);
-   if ($("#tutorial-module-s20JinsJUopQTiCv").length){
-        var tutWin=$("#tutorial-module-s20JinsJUopQTiCv")
-        html.offset({ top: 316, left: 0 })
-        tutWin.find(`.tab.scores .mainsection`).hide();
-        tutWin.find(`.tab.scores .subsection`).show();
+Hooks.on('renderCompendium', (app, html, data) => {
+    if ($(".creation-tutorial").length == 1) 
+        app.setPosition({left:756, top: 0})
+    //html.offset({ top: 0, left: 756 })
+});
+Hooks.on('renderCompendiumBrowser', (app, html, data) => {
+    if ($(".creation-tutorial").length == 1) 
+        app.setPosition({left:765, top: 756, width: 655, height: 470})
+    //html.offset({ top: 489, left: 756, width: 655, height: 470 })
+})
+Hooks.on('renderAttributeBuilder', (app, html) => {
+   if ($(".attribute-builder").length){
+        var tutWin=$(".creation-tutorial")
+        if (tutWin.find(`.tab.scores .mainsection`).is(":visible")){    
+            app.setPosition({ top: 316, left: 0 })
+            tutWin.find(`.tab.scores .mainsection`).hide();
+            tutWin.find(`.tab.scores .subsection`).show();
+        }
    }
 });
+/*
+Hooks.on('closeAttributeBuilder', (app, html) => {
+    var tutWin=$(".creation-tutorial")
+    console.debug(["exist",tutWin.length]);
+    if (tutWin.length){
+        tutWin.find(`.tab.scores`).removeClass("active").hide();
+        tutWin.find(`.tab.profs`).show().addClass("active");
+    }
+})
+*/
 Hooks.on('renderDialog', (app, html, data) => {
     if (app.title == "Create New Actor")
         if (!game.user.isTrusted )
