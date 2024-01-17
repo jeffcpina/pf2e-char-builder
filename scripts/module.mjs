@@ -1,6 +1,7 @@
 console.debug("PF2e System | PF2e Character Builder | Started "); 
 export const modName = "PF2e Character Builder";
 const mod = "pf2e-char-builder";
+/*
 var _domParser = new WeakMap;
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", {
@@ -30,7 +31,7 @@ var __defProp2 = Object.defineProperty,
             }, 
             "__privateAdd"
     )
-
+*/
 /*** end of pf2e functions */
 function add_background_link_to_actor_sheet(html){
     
@@ -153,6 +154,7 @@ Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
     }    
 });
 Hooks.on('renderBaseTagSelector', async (app,html,data) => {
+    //modifying language pulldown on char sheet
     if (data.title == "Languages"){
         var  langOption="",options="", lang=[], 
         allowedLangs = data.document.system.traits.languages.value
@@ -162,7 +164,6 @@ Hooks.on('renderBaseTagSelector', async (app,html,data) => {
 
          //get options
         options = html.find('.trait-item');
-        //if(classname=="Druid") lang.push("druidic")
         options.each( (idx, li) =>{ 
             var checkLang=!0;li = $( li ); langOption = li.find(".trait-label").html().toLowerCase();
             checkLang = (lang.includes(langOption) ) || (allowedLangs.includes(langOption) )
@@ -172,17 +173,19 @@ Hooks.on('renderBaseTagSelector', async (app,html,data) => {
  });  
  var helpApp="",inOptions=false;
  Hooks.on('renderPickAThingPrompt', async (app,html,data) => {
-
-    if (app.id=="pick-a-deity-and-cause" || app.id=="pick-a-deity"){
-        var deitylink = `<a class="help-link deity-browse" data-filter="" data-level="1"><i class="fas fa-fw fa-edit"></i></a>`
-        html.find('h3').append(deitylink);
-        html.find(".deity-browse").on("click", async event=>{
-                const compendiumBrowser = game.pf2e.compendiumBrowser;
-                const deityTab = game.pf2e.compendiumBrowser.tabs.deity, filter = await deityTab.getFilterData();
-                return deityTab.open(filter)
-        })
+    //added diety compendium on class pulldown
+    if (game.pf2e.compendiumBrowser.tabs.deity != undefined) {
+        if (app.id=="pick-a-deity-and-cause" || app.id=="pick-a-deity"){
+            var deitylink = `<a class="help-link deity-browse" data-filter="" data-level="1"><i class="fas fa-fw fa-edit"></i></a>`
+            html.find('h3').append(deitylink);
+            html.find(".deity-browse").on("click", async event=>{
+                    const compendiumBrowser = game.pf2e.compendiumBrowser;
+                    const deityTab = game.pf2e.compendiumBrowser.tabs.deity, filter = await deityTab.getFilterData();
+                    return deityTab.open(filter)
+            })
+        }
     }
- 
+    
  })
 Hooks.on('renderJournalSheetPF2e', async (app,html,data) => {
     if ( (data.document.id == "shaOL1XYgNiYPUWl")){

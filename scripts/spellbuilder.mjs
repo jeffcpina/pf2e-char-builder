@@ -204,7 +204,7 @@ function getSysInfo(actor, spells){
 }  
 async function createSpellEntryFromSource(actor,spellbook){
     //var model = await game.packs.get("pf2e.iconics").getDocument("WNX5OQKPh4uaV7mW")
-    var model = (await game.actors.get("FMytL3b5qdVX4WJx")).spellcasting.collections.get("frasT3foMzziKWnY").entry.clone({actor: actor})
+    var model = (await game.packs.get("pf2e-char-builder.actors").getDocument("nWdi6kF9jx389t4R")).spellcasting.collections.get("frasT3foMzziKWnY").entry.clone({actor: actor})
     var addition = (await (actor.createEmbeddedDocuments("Item", [model]))).shift()
     var data = {_id: addition.id, 
         system: {
