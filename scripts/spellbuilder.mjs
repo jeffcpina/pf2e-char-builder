@@ -10,6 +10,7 @@ async function compendiumSpellModifications(modifications, modify){
     console.debug([`${mod} - modifying feat modification for spells`,modifications, modify])
     for (let modIdx of modifications.index){
         var compendium = await modifications.getDocument(modIdx._id)
+        console.debug(["compendium",compendium.name])
         var classRules = compendium.system.rules, featRules=[]
         var isSpell = (classRules[0].label != "direct_tx") 
         if (isSpell) classRules.forEach(feat=>{featRules.push(feat.value)})
@@ -18,6 +19,7 @@ async function compendiumSpellModifications(modifications, modify){
             if (entry == undefined) continue
             var id = entry.id, id=id.split("."), db=`${id[1]}.${id[2]}`;
             var feat = await game.packs.get(db).getDocument(id[4])
+            console.debug(["feat",feat,id[4]])
             var originRules = feat.system.rules
             var rules = (isSpell) ? process_spell_commands(originRules,entry, modify)
                       : process_direct_commands(originRules, entry, modify)
@@ -204,7 +206,10 @@ function getSysInfo(actor, spells){
 }  
 async function createSpellEntryFromSource(actor,spellbook){
     //var model = await game.packs.get("pf2e.iconics").getDocument("WNX5OQKPh4uaV7mW")
-    var model = (await game.packs.get("pf2e-char-builder.actors").getDocument("nWdi6kF9jx389t4R")).spellcasting.collections.get("frasT3foMzziKWnY").entry.clone({actor: actor})
+    //var model = (await game.packs.get("pf2e-char-builder.actors").getDocument("nWdi6kF9jx389t4R")).spellcasting.collections.get("frasT3foMzziKWnY").entry.clone({actor: actor})
+    var model =  await game.packs.get("pf2e-char-builder.actors").getDocument( 
+                            game.packs.get("pf2e-char-builder.actors").index.contents[0]._id
+                        )
     var addition = (await (actor.createEmbeddedDocuments("Item", [model]))).shift()
     var data = {_id: addition.id, 
         system: {
@@ -388,6 +393,14 @@ export class Settings {
             restricted: true,
         });
         */
+        game.settings.register(mod, 'showCharTut', {
+            name: 'Auto Tutorial',
+            hint: 'check box if you do not wish tutorial to automatically run when character sheet is pulled up',
+            scope: 'client',     // "world" = sync to db, "client" = local storage
+            config: true,       // false if you dont want it to show in module config
+            default: false,
+            type: Boolean       // Number, Boolean, String, Object
+        });
         game.settings.register(mod, 'isCompiled', {
             name: 'Add Spell Generator Wizard',
             //hint: 'Indicator the info has been compiled',
@@ -485,11 +498,6 @@ function add_spellcaster_generator(app,html,data){
 }
 
 async function checkifClassDeletedToRemoveSpells(actor,html){
-    var spellbooks = html.find('.sheet-content').find(".spellcasting").find(".spellcasting-entry")
-    var query = $(".dialog").find(".dialog-content")//.find(".delete-all-spellcasting-dialog")
-    if (spellbooks.length !== 0 && query.length == 0){
-
-        var content = await renderTemplate("systems/pf2e/templates/actors/delete-spellcasting-dialog.hbs");
         var content = await renderTemplate(`modules/${mod}/templates/actors/delete-spellcasting-dialog.hbs`)
         let d = new Dialog({
             title: "Delete All SpellBook?",
@@ -509,7 +517,6 @@ async function checkifClassDeletedToRemoveSpells(actor,html){
             default: "no"
         });
         await d.render(true);
-    }
 }
 async function removeAllSpells(actor){
     var delDocIds = []
@@ -539,5 +546,8 @@ Hooks.on('dropActorSheetData', async (actor, actorSheet, data) => {
 });
 Hooks.on('renderActorSheet', (actor, html, data) => {
     actor = game.actors.get(data.actor._id);
-    if (actor.class==null) checkifClassDeletedToRemoveSpells(actor, html)
+    //add and spellbook exists
+    if (actor.class==null) 
+        if(actor.spellcasting.collections.contents.length != 0)
+            checkifClassDeletedToRemoveSpells(actor, html)
 });

@@ -71,6 +71,12 @@ class tutorial extends Application {
             var active = $html.find(".sheet-navigation .item.active"),
                 tabName = active.attr("data-tab");
                 if ($(event.currentTarget).hasClass("section") && ($html.find(`.tab.${tabName} .mainsection`).is(":visible")) ) {
+                        var ancestry =  this.charSheet.find('.character-details').find(".ancestry").find(".value").html().toLowerCase();
+                        debugger;
+                        if (!ancestry && tabName=="ancestry") {
+                            ui.notifications.error("Must choose a valid Ancestry first");
+                            throw ErrorPF2e(`Must choose a valid Ancestry to Continue`)
+                        }
                         $html.find(`.tab.${tabName} .mainsection`).hide();
                         $html.find(`.tab.${tabName} .subsection`).show();
                         this.highlight($html,active);
@@ -86,6 +92,10 @@ class tutorial extends Application {
                     $html.find(`.tab.${tabName} .mainsection`).show();
                     $html.find(`.tab.${tabName} .subsection`).hide();
                 }
+           })
+           $html.find(".autocheck input").prop( "checked", game.settings.get(mod,'showCharTut') )
+           $html.find(".autocheck input").on("click",event=>{
+                game.settings.set(mod,'showCharTut', $html.find(".autocheck input").prop( "checked" ))
            })
     }
     move_windows($html, active){
@@ -146,15 +156,10 @@ class tutorial extends Application {
               else  {
                     if (game.pf2e.compendiumBrowser.tabs.heritage != undefined) {
                         var ancestry =  this.charSheet.find('.character-details').find(".ancestry").find(".value").html().toLowerCase();
-
                         const heritageTab = game.pf2e.compendiumBrowser.tabs.heritage, 
                         filter = await heritageTab.getFilterData();
                         const checkboxes = filter.checkboxes.ancestry;
-            
-                        if (!ancestry) {
-                            ui.notifications.error("Must choose a valid Ancestry first");
-                            throw ErrorPF2e(`Must choose a valid Ancestry first`)
-                        }
+
                         ancestry in checkboxes.options && (checkboxes.isExpanded = !1, checkboxes.options[ancestry].selected = !0, checkboxes.selected.push(ancestry));
                         heritageTab.open(filter)
                         $app.offset({ top: 0, left: 759 }) 
@@ -327,6 +332,8 @@ async function tutorial_button(app, html, data){
         const updates = [{_id: id, "ownership.default": 0}];
         const updated = await Actor.updateDocuments(updates);
     }
+
+    if (! game.settings.get(mod,'showCharTut')) tutorialInstance[id].openForActor(app, html, data)
 };
 Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
     tutorial_button(app, html, data);
@@ -374,8 +381,5 @@ let tutorialInstance = [];
 //todo 
 //add image dialog to add url image to token
 //Finish landscape library
-//correct css issuse with mods added
-   //journal has two background, make internal transpanrent
-   //text color in some area not visible
 //macro to save settings and give a name to it
 //macro not visible to users

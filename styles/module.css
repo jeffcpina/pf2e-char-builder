@@ -282,3 +282,11 @@ span.glowing {
 .actor.sheet .crb-style section.major > header button.has-unallocated.unhighlight{
     animation: none !important;
 }
+#tutorial .autocheck {
+    float: right;
+    margin: 10px 10px;
+}
+#tutorial .autocheck label {
+    display: flex;
+    align-items: center;
+}
