@@ -319,7 +319,7 @@ async function checkForDeityDomainFeats(actor){
             var targetRules = feat.system.rules;
             if ( !( targetRules.some(el=>{return el.path==sourceRule.path} ) ) ){//if rule not embedded 
                 targetRules.push(sourceRule);
-                targetRules = addFolders(targetRules);
+                //targetRules = addFolders(targetRules);
                 await actor.updateEmbeddedDocuments("Item", [{_id: feat.id, "system.rules": targetRules}]) //actor.render();//var template = actor.flags.pf2e.spellcasting.templates;
                 console.log(`${modName} - Rule added to domain feat for spellbook`)
             } 
