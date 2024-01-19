@@ -75,7 +75,7 @@
     {
         "name": "PF2e Builder",
         "sorting": "a",
-        "color": "#000000",
+        "color": "#1a4d22",
         "packs": [
               "pf2e-cb-actors",
               "pf2e-cb-addons",
