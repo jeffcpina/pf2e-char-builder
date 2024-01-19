@@ -84,17 +84,23 @@ function add_heritage_link_to_actor_sheet(html){
 }
 async function add_language_counter_to_actor_sheet(app,html,data){
     var lang_title =  html.find('.pc_languages').find(".details-label");
+    var lang_title = html.find(`[data-tag-selector="languages"]`)
     var skillTitle = html.find(".tab.proficiencies header").first();
+    console.debug(["anchors",lang_title.length])
         //language
+        /*
         var actor=data.actor,classData=data.class;
         var className=classData.name, uuid=classData.flags.core.sourceId,
             totLang= actor.system.abilities.int.mod,
-            langChosen = app.object.toObject().system.traits.languages.value.length,
+            langChosen = app.object.toObject().system.details.languages.value.length,
             langAvail=totLang-langChosen
         if(langAvail!=0)
-        lang_title.after((langAvail>0)?`<div class="remaining extra">${langAvail}</div>`:
+        lang_title.before((langAvail>0)?`<div class="remaining extra">${langAvail}</div>`:
                         `<span class='tags addLangs errTags'><span class='tag'>Too many languagues. Reduce by ${Math.abs(langAvail)}</span></span>`)
+        */                
         //skills
+        var actor=data.actor,classData=data.class;
+        var className=classData.name, uuid=classData.flags.core.sourceId;
         const [type2,scope,packId,id] = uuid.split(".");
         
         var skillsBkgd=data.background.system.trainedSkills.value.length, 
@@ -223,66 +229,66 @@ Hooks.on('renderItemSheet', (app, html, data) => {
     });
     //maybe convert to a add to compedium data routine
     var vids = []; var vidBtn = "";
-    vids["XwfcJuskrhI9GIjX"]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.LvJS7hzIl5Os2aT6`;//Alchemist
-    vids[`YDRiP7uVvr9WRhOI`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.IHoEj7FzIhDRP99Y`;//"Barbarian
-    vids[`3gweRQ5gn7szIWAv`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.DSRN9zHn51SDjynF`;//"Bard
-    vids[`x8iwnpdLbfcoZkHA`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.QT9L2wywBLeWiC33`;//"Champion
-    vids[`EizrWvUPMS67Pahd`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.ugebghE6bw8ZJ4zU`;//"Cleric
-    vids[`7s57JDCaiYYCAdFx`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.EINUpj9gI8vOITNJ`;//"Druid
-    vids[`8zn3cD6GSmoo1LW4`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.HDwEzuH82DJ9e9E8`;//"Fighter
-    vids[`Z9li154CPNmun29Q`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.9nCq4KgekZaUG9fo`;//"Gunslinger
-    vids[`30qVs46dVNflgQNx`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.cglQYwat1B931AHV`;//"Investigator
-    vids[`4wrSCyX6akmyo7Wj`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.cglQYwat1B931AHV`;//"Inventor
-    vids[`HQBA9Yx2s8ycvz3C`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.GTLZwxMxA8A6I2QH`;//"Magus
-    vids[`YPxpk9JbMnKjbNLc`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.0VDcoZUaZM9uVIhS`;//"Monk
-    vids[`pWHx4SXcft9O2udP`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.02XIhyDLFBNZl9Uv`;//"Oracle
-    vids[`Inq4gH3P5PYjSQbD`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.i730el8QkFjR3Lfh`;//"Psychic
-    vids[`Yix76sfxrIlltSTJ`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.FPf0fbVP5XU8v46J`;//"Ranger
-    vids[`LO9STvskJemPkiAI`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.rrnsfSqzFzeqW0op`;//"Rogue
-    vids[`15Yc1r6s9CEhSTMe`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.9yzCrSTZbEq9fPpX`;//"Sorcerer
-    vids[`YtOm245r8GFSFYeD`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.ucPuLPx1p60qZdgf`;//"Summoner
-    vids[`uJ5aCzlw34GGdWjp`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.OfC15pnHKffi0go0`;//"Swashbuckler
-    vids[`Y5GsHqzCzJlKka6x`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.c4y6ZA2ivTCeOjDs`;//"Thaumaturge
-    vids[`bYDXk9HUMKOuym9h`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.7W1Hh99Rav2g3HGa`;//"Witch
-    vids[`RwjIZzIxzPpUglnK`]=`Compendium.pf2e-char-builder.options.YCTH8HAHnsd1e3b2.JournalEntryPage.6I4GHbGtugalKapc`;//"Wizard
+    vids["XwfcJuskrhI9GIjX"]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.LvJS7hzIl5Os2aT6`;//Alchemist
+    vids[`YDRiP7uVvr9WRhOI`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.IHoEj7FzIhDRP99Y`;//"Barbarian
+    vids[`3gweRQ5gn7szIWAv`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.DSRN9zHn51SDjynF`;//"Bard
+    vids[`x8iwnpdLbfcoZkHA`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.QT9L2wywBLeWiC33`;//"Champion
+    vids[`EizrWvUPMS67Pahd`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.ugebghE6bw8ZJ4zU`;//"Cleric
+    vids[`7s57JDCaiYYCAdFx`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.EINUpj9gI8vOITNJ`;//"Druid
+    vids[`8zn3cD6GSmoo1LW4`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.HDwEzuH82DJ9e9E8`;//"Fighter
+    vids[`Z9li154CPNmun29Q`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.9nCq4KgekZaUG9fo`;//"Gunslinger
+    vids[`30qVs46dVNflgQNx`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.cglQYwat1B931AHV`;//"Investigator
+    vids[`4wrSCyX6akmyo7Wj`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.cglQYwat1B931AHV`;//"Inventor
+    vids[`HQBA9Yx2s8ycvz3C`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.GTLZwxMxA8A6I2QH`;//"Magus
+    vids[`YPxpk9JbMnKjbNLc`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.0VDcoZUaZM9uVIhS`;//"Monk
+    vids[`pWHx4SXcft9O2udP`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.02XIhyDLFBNZl9Uv`;//"Oracle
+    vids[`Inq4gH3P5PYjSQbD`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.i730el8QkFjR3Lfh`;//"Psychic
+    vids[`Yix76sfxrIlltSTJ`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.FPf0fbVP5XU8v46J`;//"Ranger
+    vids[`LO9STvskJemPkiAI`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.rrnsfSqzFzeqW0op`;//"Rogue
+    vids[`15Yc1r6s9CEhSTMe`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.9yzCrSTZbEq9fPpX`;//"Sorcerer
+    vids[`YtOm245r8GFSFYeD`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.ucPuLPx1p60qZdgf`;//"Summoner
+    vids[`uJ5aCzlw34GGdWjp`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.OfC15pnHKffi0go0`;//"Swashbuckler
+    vids[`Y5GsHqzCzJlKka6x`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.c4y6ZA2ivTCeOjDs`;//"Thaumaturge
+    vids[`bYDXk9HUMKOuym9h`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.7W1Hh99Rav2g3HGa`;//"Witch
+    vids[`RwjIZzIxzPpUglnK`]=`Compendium.pf2e-char-builder.pf2e-cb-options.YCTH8HAHnsd1e3b2.JournalEntryPage.6I4GHbGtugalKapc`;//"Wizard
     vids[`xx`]=``;//"Kineticist
 
-    vids[`TQEqWqc7BYiadUdY`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.sqMtDee0yQnOFNpv`;//https://youtu.be/dB_lFBxjD3M?si=vyyjkJjPeoGl-_SX`;//Anadi
-    vids[`GfLwE884NoRC7cRi`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.bOru6Yi0M3MYupsa`;//https://youtu.be/YddTAkFCt8k?si=2tfKqLnVXEwlfduq`;//Android
-    vids[`kYsBAJ103T44agJF`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.I7c6bRvh1ATYE0pd`;//https://youtu.be/NmP6So896LU?si=qcI5k1fWp2iAWucV`;//Automaton
-    vids[`yFoojz6q3ZjvceFw`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.hIYJIL1txLXZQd8t`;//https://youtu.be/_taHqY7Zg80?si=JJa0mdqRCw6wKSDr`;//Azarketi
-    vids[`972EkpJOPv9KkQIW`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.TfCecppUp0tUH8um`;//https://youtu.be/e0fejpVbkJo?si=8_ZImdwnwLOlAOLy`;//Catfolk
-    vids[`tZn4qIHCUA6wCdnI`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.pke0567a9N1m3WJz`;//https://youtu.be/Go6w2T50O4A?si=SAbSYB5pUuJLfnkL`;//Conrasu
-    vids[`BYj5ZvlXZdpaEgA6`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.obSglyAHlFKs3jTt`;//https://youtu.be/jVOFhVdv434?si=ZhfaZFmpwaY7AFEw`;//Dwarf
-    vids[`PgKmsA2aKdbLU6O0`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.aIGkrfK12w2vLw2T`;//https://youtu.be/4m0UtXQTUpY?si=ivntPdOr2QSPdn6B`;//Elf
+    vids[`TQEqWqc7BYiadUdY`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.sqMtDee0yQnOFNpv`;//https://youtu.be/dB_lFBxjD3M?si=vyyjkJjPeoGl-_SX`;//Anadi
+    vids[`GfLwE884NoRC7cRi`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.bOru6Yi0M3MYupsa`;//https://youtu.be/YddTAkFCt8k?si=2tfKqLnVXEwlfduq`;//Android
+    vids[`kYsBAJ103T44agJF`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.I7c6bRvh1ATYE0pd`;//https://youtu.be/NmP6So896LU?si=qcI5k1fWp2iAWucV`;//Automaton
+    vids[`yFoojz6q3ZjvceFw`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.hIYJIL1txLXZQd8t`;//https://youtu.be/_taHqY7Zg80?si=JJa0mdqRCw6wKSDr`;//Azarketi
+    vids[`972EkpJOPv9KkQIW`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.TfCecppUp0tUH8um`;//https://youtu.be/e0fejpVbkJo?si=8_ZImdwnwLOlAOLy`;//Catfolk
+    vids[`tZn4qIHCUA6wCdnI`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.pke0567a9N1m3WJz`;//https://youtu.be/Go6w2T50O4A?si=SAbSYB5pUuJLfnkL`;//Conrasu
+    vids[`BYj5ZvlXZdpaEgA6`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.obSglyAHlFKs3jTt`;//https://youtu.be/jVOFhVdv434?si=ZhfaZFmpwaY7AFEw`;//Dwarf
+    vids[`PgKmsA2aKdbLU6O0`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.aIGkrfK12w2vLw2T`;//https://youtu.be/4m0UtXQTUpY?si=ivntPdOr2QSPdn6B`;//Elf
     //vids[`hIA3qiUsxvLZXrFP`]=``;//Fetchling
-    vids[`FXlXmNBFiiz9oasi`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.9y2fhWuFqaC7PXIg`;//https://youtu.be/dNkFzuLQd2s?si=afU4Eb_T2oD4cUD-`;//Fleshwarp
-    vids[`tSurOqRcfumadTfr`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.wJ1HpxByFNeWHlr5`;//https://youtu.be/3Omrgcq_p6M?si=WKYjhJJMccQz6QXI`;//Ghoran
-    vids[`vxbQ1Yw4qwgjTzqo`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.54OmxV3YbvO7M4Ex`;//https://youtu.be/jRC8LMY7MZ4?si=7iaA_9TX6qmb8cLi`;//Gnoll
-    vids[`CYlfsYLJcBOgqKtD`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.BibIJrSF73j38Q9D`;//https://youtu.be/FPe7Y99v72k?si=GaruhM91WRJjqr6Y`;//Gnome
-    vids[`sQfjTMDaZbT9DThq`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.DhmFHWi4ytHkdQne`;//https://youtu.be/GLerWYi0zN8?si=oPJk8yvW0M9xTo5E`;//Goblin
-    vids[`c4secsSNG2AO7I5i`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.E5D0Bd5pRuDtgEWb`;//https://youtu.be/gRoMGn4_NAg?si=td70SIt8Urdh0L0h`;//Goloma
-    vids[`hXM5jXezIki1cMI2`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.P0nKWSUy68ukLpdx`;//https://youtu.be/X0MVWwaaUCM?si=p5xL3dWd047RsaxQ`;//Grippli
-    vids[`GgZAHbrjnzWOZy2v`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.MBTBhHHKLwHhncbs`;//https://youtu.be/3XYyWMSuuVw?si=TX9p_G5XMe-f-fsD`;//Halfling
-    vids[`piNLXUrm9iaGqD2i`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.lP53YCPKJPWmpMEY`;//https://youtu.be/zDPVr8GJwO8?si=3lzkypG5lCKjT363`;//Hobgoblin
-    vids[`IiG7DgeLWYrSNXuX`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.PTcXLs6kwL6qqsGc`;//https://youtu.be/fSBwD8OtBlI?si=TodgoDlRSkl9p4l0`;//Human
-    vids[`dw2K1AJR9mQ25nDP`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.8pREO6JwigzocAGf`;//https://youtu.be/YGyij055E1I?si=3vrSNNeSx3yYiq-j`;//Kashrishi
-    vids[`4BL5wf1VF9feC2rY`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.FELRCcg7QxZc5hqM`;//https://youtu.be/EnBhgC0A3_Q?si=ORelqbOcAxK1u3RO`;//Kitsune
-    vids[`7oQxL6wgsokD3QXG`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.QbBzlU5i8nF62tbq`;//https://youtu.be/HVdsEkgUxxU?si=7BiZc97ed56zvJ48`;//Kobold
-    vids[`cdhgByGG1WtuaK73`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.4Yclfnt95kiHa9jg`;//https://youtu.be/RbYAmmKR0WI?si=FIlUkIkbsRDY6gQU`;//Leshy
-    vids[`HWEgF7Gmoq55VhTL`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.kjJWcXK1yeaKqG4x`;//https://youtu.be/HI5eAxtNUwE?si=2UDxQ1pmtHS9J3ah`;//Lizardfolk
-    vids[`J7T7bDLaQGoY1sMF`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.bowxODW6Qt8INdom`;//https://youtu.be/fARI9n-3HNc?si=vsbnXJ5N7hdrBaCH`;//Nagaji
-    vids[`lSGWXjcbOa6O5fTx`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.pL1xvSfOFiDThv3H`;//https://youtu.be/HVdsEkgUxxU?si=7BiZc97ed56zvJ48`;//Orc
-    vids[`6F2fSFC1Eo1JdpY4`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.mIHMWaI1Xmk0JH36`;//https://youtu.be/iUtGj6HEXso?si=mDVhNSnuUn8kEALn`;//Poppet
-    vids[`P6PcVnCkh4XMdefw`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.4HGvkFmjK2GAnI2r`;//https://youtu.be/QFnyBv6zk9w?si=EDpHdfB0wsUAp-Xo`;//Ratfolk
-    vids[`x1YinOddgUxwOLqP`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.vrWsHSGDtFshGMja`;//https://youtu.be/F9JaN867Ksg?si=IjcrjnOvCV5VpHV6`;//Shisk
-    vids[`q6rsqYARyOGXZA8F`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.nBkgNnqQjccgfo6g`;//https://youtu.be/zgkTPrreDUU?si=8nm74RKj11ohV-Oh`;//Shoony
-    vids[`58rL5sg2y4arW1i5`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.AgLQYwaEqX2APnmQ`;//https://youtu.be/suSjk4MkAPQ?si=SCT3cLS5wbk4ewNC`;//Skeleton
-    vids[`TRqoeYfGAFjQbviF`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.nHxai2MvBr0groZz`;//https://youtu.be/LnJOG0phhKY?si=WAfre4Wl36Hk2hSI`;//Sprite
+    vids[`FXlXmNBFiiz9oasi`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.9y2fhWuFqaC7PXIg`;//https://youtu.be/dNkFzuLQd2s?si=afU4Eb_T2oD4cUD-`;//Fleshwarp
+    vids[`tSurOqRcfumadTfr`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.wJ1HpxByFNeWHlr5`;//https://youtu.be/3Omrgcq_p6M?si=WKYjhJJMccQz6QXI`;//Ghoran
+    vids[`vxbQ1Yw4qwgjTzqo`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.54OmxV3YbvO7M4Ex`;//https://youtu.be/jRC8LMY7MZ4?si=7iaA_9TX6qmb8cLi`;//Gnoll
+    vids[`CYlfsYLJcBOgqKtD`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.BibIJrSF73j38Q9D`;//https://youtu.be/FPe7Y99v72k?si=GaruhM91WRJjqr6Y`;//Gnome
+    vids[`sQfjTMDaZbT9DThq`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.DhmFHWi4ytHkdQne`;//https://youtu.be/GLerWYi0zN8?si=oPJk8yvW0M9xTo5E`;//Goblin
+    vids[`c4secsSNG2AO7I5i`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.E5D0Bd5pRuDtgEWb`;//https://youtu.be/gRoMGn4_NAg?si=td70SIt8Urdh0L0h`;//Goloma
+    vids[`hXM5jXezIki1cMI2`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.P0nKWSUy68ukLpdx`;//https://youtu.be/X0MVWwaaUCM?si=p5xL3dWd047RsaxQ`;//Grippli
+    vids[`GgZAHbrjnzWOZy2v`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.MBTBhHHKLwHhncbs`;//https://youtu.be/3XYyWMSuuVw?si=TX9p_G5XMe-f-fsD`;//Halfling
+    vids[`piNLXUrm9iaGqD2i`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.lP53YCPKJPWmpMEY`;//https://youtu.be/zDPVr8GJwO8?si=3lzkypG5lCKjT363`;//Hobgoblin
+    vids[`IiG7DgeLWYrSNXuX`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.PTcXLs6kwL6qqsGc`;//https://youtu.be/fSBwD8OtBlI?si=TodgoDlRSkl9p4l0`;//Human
+    vids[`dw2K1AJR9mQ25nDP`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.8pREO6JwigzocAGf`;//https://youtu.be/YGyij055E1I?si=3vrSNNeSx3yYiq-j`;//Kashrishi
+    vids[`4BL5wf1VF9feC2rY`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.FELRCcg7QxZc5hqM`;//https://youtu.be/EnBhgC0A3_Q?si=ORelqbOcAxK1u3RO`;//Kitsune
+    vids[`7oQxL6wgsokD3QXG`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.QbBzlU5i8nF62tbq`;//https://youtu.be/HVdsEkgUxxU?si=7BiZc97ed56zvJ48`;//Kobold
+    vids[`cdhgByGG1WtuaK73`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.4Yclfnt95kiHa9jg`;//https://youtu.be/RbYAmmKR0WI?si=FIlUkIkbsRDY6gQU`;//Leshy
+    vids[`HWEgF7Gmoq55VhTL`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.kjJWcXK1yeaKqG4x`;//https://youtu.be/HI5eAxtNUwE?si=2UDxQ1pmtHS9J3ah`;//Lizardfolk
+    vids[`J7T7bDLaQGoY1sMF`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.bowxODW6Qt8INdom`;//https://youtu.be/fARI9n-3HNc?si=vsbnXJ5N7hdrBaCH`;//Nagaji
+    vids[`lSGWXjcbOa6O5fTx`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.pL1xvSfOFiDThv3H`;//https://youtu.be/HVdsEkgUxxU?si=7BiZc97ed56zvJ48`;//Orc
+    vids[`6F2fSFC1Eo1JdpY4`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.mIHMWaI1Xmk0JH36`;//https://youtu.be/iUtGj6HEXso?si=mDVhNSnuUn8kEALn`;//Poppet
+    vids[`P6PcVnCkh4XMdefw`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.4HGvkFmjK2GAnI2r`;//https://youtu.be/QFnyBv6zk9w?si=EDpHdfB0wsUAp-Xo`;//Ratfolk
+    vids[`x1YinOddgUxwOLqP`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.vrWsHSGDtFshGMja`;//https://youtu.be/F9JaN867Ksg?si=IjcrjnOvCV5VpHV6`;//Shisk
+    vids[`q6rsqYARyOGXZA8F`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.nBkgNnqQjccgfo6g`;//https://youtu.be/zgkTPrreDUU?si=8nm74RKj11ohV-Oh`;//Shoony
+    vids[`58rL5sg2y4arW1i5`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.AgLQYwaEqX2APnmQ`;//https://youtu.be/suSjk4MkAPQ?si=SCT3cLS5wbk4ewNC`;//Skeleton
+    vids[`TRqoeYfGAFjQbviF`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.nHxai2MvBr0groZz`;//https://youtu.be/LnJOG0phhKY?si=WAfre4Wl36Hk2hSI`;//Sprite
     //vids[`GXcC6oVa5quzgNHD`]=``;//Strix
-    vids[`18xDKYPDBLEv2myX`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.JGVv8Pwf6Oo3BLba`;//https://youtu.be/WuvcEn9IHaI?si=SUtJKE9y-3AaCE1r`;//Tengu
-    vids[`cLtOGIkuSSa4UDHY`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.bHf1LIzDXrvlbWRY`;//https://youtu.be/RDmN6ma3R_U?si=UPKI-Jks5QTz8FZq`;//Vanara
-    vids[`u1VJEXsVlmh3Fyx0`]=`Compendium.pf2e-char-builder.options.mN2qmLbiV1PesCwn.JournalEntryPage.Kl64TE4CBKGupVxv`;//https://youtu.be/ZD7l5AKqG08?si=5y4KqlWyLXtro41e`;//Vishkanya']
+    vids[`18xDKYPDBLEv2myX`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.JGVv8Pwf6Oo3BLba`;//https://youtu.be/WuvcEn9IHaI?si=SUtJKE9y-3AaCE1r`;//Tengu
+    vids[`cLtOGIkuSSa4UDHY`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.bHf1LIzDXrvlbWRY`;//https://youtu.be/RDmN6ma3R_U?si=UPKI-Jks5QTz8FZq`;//Vanara
+    vids[`u1VJEXsVlmh3Fyx0`]=`Compendium.pf2e-char-builder.pf2e-cb-options.mN2qmLbiV1PesCwn.JournalEntryPage.Kl64TE4CBKGupVxv`;//https://youtu.be/ZD7l5AKqG08?si=5y4KqlWyLXtro41e`;//Vishkanya']
 
     if (vids[app.object._id] != undefined){
         html.find('.details').length
@@ -382,6 +388,4 @@ Hooks.on('renderCompendium', (app, html, data) => {
     }
 })
 //todo
-//add player core rules
-//remove sections and menu on tutorial front sheet
-//remove journal customizations
+//allow players to put url in character image (limiting size ?)

@@ -3,7 +3,7 @@ export const modName = "PF2e Character Builder";
 const mod = "pf2e-char-builder";
 
 /******** Start of Feats Modifications *****/
-var rootPath = "spellcasting.templates", builtRules = [], spellEntries=[];
+var rootPath = "flags.pf2e.spellcasting.templates", builtRules = [], spellEntries=[];
 //add choice set to Bloodline:Genie feat Compendium.pf2e.classfeatures.tYOMBiH3HbViNWwn
 //add choice set to Eiodolon feat Compendium.pf2e.classfeatures.qOEpe596B0UjhcG0
 async function compendiumSpellModifications(modifications, modify){
@@ -25,7 +25,7 @@ async function compendiumSpellModifications(modifications, modify){
                       : process_direct_commands(originRules, entry, modify)
             
             if (rules) {
-                rules = (modify) ? addFolders(rules) : removeFolders(rules);
+                //rules = (modify) ? addFolders(rules) : removeFolders(rules);
                 await Item.updateDocuments([{_id: id[4], system:{rules: rules} }], {pack: db});
                 var descript = (modify)?"no of modifications":"reset to"
                 console.debug([id[4], feat.name, rules, `${descript}: ${rules.length}`]  );
@@ -36,10 +36,10 @@ async function compendiumSpellModifications(modifications, modify){
 }
 function addFolders(rules){
     var pathSegs=new Set, maxSegs=1, newRules = []
-    newRules.push({key: "ActiveEffectLike",mode:"override",path: "spellcasting.templates._folder",priority:22,value:"folder" })
+    newRules.push({key: "ActiveEffectLike",mode:"override",path: "flags.pf2e.spellcasting.templates._folder",priority:22,value:"folder" })
     rules.forEach(rule=>{
         try{
-            var fullPath = rule.path, pt="", pathArr = fullPath.replace("spellcasting.templates.","").split(".");
+            var fullPath = rule.path, pt="", pathArr = fullPath.replace("flags.pf2e.spellcasting.templates.","").split(".");
             if (pathArr.length>maxSegs) maxSegs = pathArr.length;
             var segAdd = "";pathArr.forEach((seg)=>{pathSegs.add(segAdd=segAdd+pt+seg);pt=".";})
         }
@@ -51,7 +51,7 @@ function addFolders(rules){
     for (const seg of pathSegs) {
         var pathArr = seg.split(".");
         if (pathArr.length < maxSegs) {
-            newRules.push({key: "ActiveEffectLike",mode:"override",path: "spellcasting.templates."+seg+"._folder",priority: (22 + pathArr.length),value:"folder" })
+            newRules.push({key: "ActiveEffectLike",mode:"override",path: "flags.pf2e.spellcasting.templates."+seg+"._folder",priority: (22 + pathArr.length),value:"folder" })
         }
     }
     return [...newRules, ...rules]; 
@@ -130,7 +130,7 @@ function createLine(label, val, rootSuffix ){
         if (["books","slots"].includes(lastSeg)) {label = `${label}.max`}
         term = `${newSeg}${label}`
     };
-    var obj = {key:"ActiveEffectLike",mode:"override",path:`${rootPath}.${rootSuffix}.${term}`,priority:33,value: val} 
+    var obj = {key:"ActiveEffectLike",mode:"override",path:`flags.pf2e.${rootPath}.${rootSuffix}.${term}`,priority:33,value: val} 
     builtRules.push(obj)
     return obj
 }
@@ -140,8 +140,8 @@ function createLine(label, val, rootSuffix ){
 async function processEachSpellBook(data){
     var actor = game.actors.get(data.actor._id)
 
-    if (actor.spellcasting.templates !=undefined){
-        var spellSets = actor.spellcasting.templates
+    if (actor.flags.pf2e.spellcasting.templates !=undefined){
+        var spellSets = actor.flags.pf2e.spellcasting.templates
         if (spellSets !== undefined ) await cycleThruCollectedSpellBooks(collectSpellBooks(spellSets, actor), actor)
         addSpellsGrantedToClericFromDeity(actor)
     }
@@ -207,9 +207,10 @@ function getSysInfo(actor, spells){
 async function createSpellEntryFromSource(actor,spellbook){
     //var model = await game.packs.get("pf2e.iconics").getDocument("WNX5OQKPh4uaV7mW")
     //var model = (await game.packs.get("pf2e-char-builder.actors").getDocument("nWdi6kF9jx389t4R")).spellcasting.collections.get("frasT3foMzziKWnY").entry.clone({actor: actor})
-    var model =  await game.packs.get("pf2e-char-builder.actors").getDocument( 
-                            game.packs.get("pf2e-char-builder.actors").index.contents[0]._id
-                        )
+    //get model of empty spellcasting entry object from compendium actor
+    var model = (await game.packs.get("pf2e-char-builder.pf2e-cb-actors").getDocument( 
+                            game.packs.get("pf2e-char-builder.pf2e-cb-actors").index.contents[0]._id
+                )).spellcasting.contents[0]
     var addition = (await (actor.createEmbeddedDocuments("Item", [model]))).shift()
     var data = {_id: addition.id, 
         system: {
@@ -319,7 +320,7 @@ async function checkForDeityDomainFeats(actor){
             if ( !( targetRules.some(el=>{return el.path==sourceRule.path} ) ) ){//if rule not embedded 
                 targetRules.push(sourceRule);
                 targetRules = addFolders(targetRules);
-                await actor.updateEmbeddedDocuments("Item", [{_id: feat.id, "system.rules": targetRules}]) //actor.render();//var template = actor.spellcasting.templates;
+                await actor.updateEmbeddedDocuments("Item", [{_id: feat.id, "system.rules": targetRules}]) //actor.render();//var template = actor.flags.pf2e.spellcasting.templates;
                 console.log(`${modName} - Rule added to domain feat for spellbook`)
             } 
         })
@@ -347,7 +348,7 @@ function createFeatRule(level,name,value) {
    return {
        key: "ActiveEffectLike",
        mode: "override",
-       path: `spellcasting.templates.classname.spells.focus.spellList.${level}.${name}`,
+       path: `flags.pf2e.spellcasting.templates.classname.spells.focus.spellList.${level}.${name}`,
        priority: 33,
        value: value
    }
@@ -433,7 +434,7 @@ export class Settings {
         });
     }
     static async updateSpellCompendiums(isSubmit) {
-        var db = "pf2e-char-builder.addons";
+        var db = "pf2e-char-builder.pf2e-cb-addons";
         var classFeats = game.packs.get("pf2e.classfeatures")
         await classFeats.configure({locked:false})
         if (classFeats.locked) ui.notifications.info("***  Could not unlock Class Features ***")
@@ -464,7 +465,7 @@ class AddRemoveConfig extends FormApplication {
     }
     async _updateObject(event, formData) {
         const isSubmit = (event.submitter.id=="submit") 
-        var db = "pf2e-char-builder.addons";
+        var db = "pf2e-char-builder.pf2e-cb-addons";
         //var db = "world.jeff-tests";
         var msg = await compendiumSpellModifications(game.packs.get(db), isSubmit);
         ui.notifications.info(msg);
@@ -475,10 +476,12 @@ class AddRemoveConfig extends FormApplication {
 /*** end of classes */
 
 function add_spellcaster_generator(app,html,data){
-    var new_html = $('<a class="item-control blue-button" data-action="spellcasting-generate" title="Generate Spells" data-type="spell" data-level="" style="width: 100px;"><i class="fas fa-bolt"></i>Generate</a>');
-    var el2 = html.find('.sheet-content').find(".spellcasting").find(".spellcastingEntry-list").find('.item-control[data-action="spellcasting-create"]');
+    var new_html = $('<div class="wizSection"><a class="blue wizard" title="Generate Spells"><i class="fas fa-bolt"></i>Generate</a><div>');
+    var el2 = html.find('.sheet-content').find(".spellcasting").find('[data-action="spellcasting-create"]')
     el2.width(200)
     el2.after(new_html); 
+    html.find('.sheet-content').find(".spellcasting").find('.wizSection').prepend(el2)
+    
     new_html.on("click", async event=>{
         processEachSpellBook(data);
         return;

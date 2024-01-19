@@ -22,7 +22,6 @@ async function loadHandleBarTemplates()
     return loadTemplates( templatePaths );
 }
 class tutorial extends Application {
-    resource = false;
     constructor(actor_id) {
         super();
         this.options.id = `tutorial-module-${actor_id}`;
@@ -72,7 +71,6 @@ class tutorial extends Application {
                 tabName = active.attr("data-tab");
                 if ($(event.currentTarget).hasClass("section") && ($html.find(`.tab.${tabName} .mainsection`).is(":visible")) ) {
                         var ancestry =  this.charSheet.find('.character-details').find(".ancestry").find(".value").html().toLowerCase();
-                        debugger;
                         if (!ancestry && tabName=="ancestry") {
                             ui.notifications.error("Must choose a valid Ancestry first");
                             throw ErrorPF2e(`Must choose a valid Ancestry to Continue`)
@@ -138,20 +136,20 @@ class tutorial extends Application {
     async manageResource($html,active){
         var $app = $html.closest(".app.creation-tutorial");
         var activeTab = active.attr("data-tab")
-        if (ui.windows[this.resource] != undefined) {
-            var isheritage = $html.find(`.tab.${active.attr("data-tab")} .subsection`).is(":visible")
-            if(this.resource == 115){
-                if( !(isheritage || activeTab == "background")) ui.windows[this.resource].close()
+        if (activeTab != "background"){
+            const killList = ["compendium-pf2e.ancestries","compendium-pf2e.background","compendium-pf2e.classes","compendium-browser",]
+            for (const id in ui.windows){ 
+                if (killList.includes(ui.windows[id].id )){ 
+                    ui.windows[id].close()
+                }
+                if (String(ui.windows[id].id).startsWith("attribute-builder")) ui.windows[id].close()
             }
-            else ui.windows[this.resource].close()
-        }    
+        }
         switch(activeTab) {
             case "ancestry":
               if ($html.find(`.tab.${active.attr("data-tab")} .mainsection`).is(":visible")){
-                    this.resource = "pf2e.ancestries";
-                    this.resource = game.packs.get(this.resource).render(!0)
+                    game.packs.get("pf2e.ancestries").render(!0)
                     $app.offset({ top: 0, left: 1108 })
-                    this.resource = 74;
               }
               else  {
                     if (game.pf2e.compendiumBrowser.tabs.heritage != undefined) {
@@ -163,13 +161,10 @@ class tutorial extends Application {
                         ancestry in checkboxes.options && (checkboxes.isExpanded = !1, checkboxes.options[ancestry].selected = !0, checkboxes.selected.push(ancestry));
                         heritageTab.open(filter)
                         $app.offset({ top: 0, left: 759 }) 
-                        this.resource = 115;
                     }
                     else {
-                        this.resource = "pf2e.heritages";
-                        this.resource = game.packs.get(this.resource).render(!0)
+                        game.packs.get("pf2e.heritages").render(!0)
                         $app.offset({ top: 0, left: 1108 }) 
-                        this.resource = 81;
                     }
               }
               break;
@@ -180,21 +175,16 @@ class tutorial extends Application {
                     filter = await backgroundTab.getFilterData();
                     backgroundTab.open(filter)
                     $app.offset({ top: 0, left: 759 }) 
-                    this.resource = 115;
                 }
                 else {
-                    this.resource = "pf2e.backgrounds";
-                    this.resource = game.packs.get(this.resource).render(!0)
+                    game.packs.get("pf2e.backgrounds").render(!0)
                     $app.offset({ top: 0, left: 1108 }) 
-                    this.resource = 76;
                 }
 
               break;
             case "classSheet":
-                this.resource = "pf2e.classes";
-                this.resource = game.packs.get(this.resource).render(!0)
+                game.packs.get("pf2e.classes").render(!0)
                 $app.offset({ top: 0, left: 1108 })  
-                this.resource = 77;
               break; 
           }
     }

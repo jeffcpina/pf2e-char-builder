@@ -37,7 +37,7 @@
     {
       "label": "Builder Actors",
       "type": "Actor",
-      "name": "actors",
+      "name": "pf2e-cb-actors",
       "path": "packs/actors.db",
       "system": "pf2e",
       "private": false,
@@ -46,7 +46,7 @@
     {
       "label": "Builder Addons",
       "type": "Item",
-      "name": "addons",
+      "name": "pf2e-cb-addons",
       "path": "packs/addons.db",
       "system": "pf2e",
       "private": false,
@@ -55,7 +55,7 @@
     {
       "label": "Builder Feats",
       "type": "Item",
-      "name": "feats",
+      "name": "pf2e-cb-feats",
       "path": "packs/feats.db",
       "system": "pf2e",
       "private": false,
@@ -64,11 +64,24 @@
     {
       "label": "Builder Options",
       "type": "JournalEntry",
-      "name": "options",
+      "name": "pf2e-cb-options",
       "path": "packs/options.db",
       "system": "pf2e",
       "private": false,
       "flags": {}
+    }
+  ],
+  "packFolders": [
+    {
+        "name": "PF2e Builder",
+        "sorting": "a",
+        "color": "#000000",
+        "packs": [
+              "pf2e-cb-actors",
+              "pf2e-cb-addons",
+              "pf2e-cb-feats",
+              "pf2e-cb-options"
+        ]
     }
   ],
   "download": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.11.1/pf2e-char-builder.zip",
