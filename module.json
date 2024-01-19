@@ -84,8 +84,8 @@
         ]
     }
   ],
-  "download": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.11.2/pf2e-char-builder.zip",
-  "manifest": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.11.2/module.json",
+  "download": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.11.3/pf2e-char-builder.zip",
+  "manifest": "https://github.com/jeffcpina/pf2e-char-builder/releases/download/v0.11.3/module.json",
   "license": "MIT",
   "readme": "README.md",
   "url": "https://github.com/jeffcpina/pf2e-char-builder"

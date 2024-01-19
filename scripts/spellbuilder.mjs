@@ -25,38 +25,14 @@ async function compendiumSpellModifications(modifications, modify){
                       : process_direct_commands(originRules, entry, modify)
             
             if (rules) {
-                //rules = (modify) ? addFolders(rules) : removeFolders(rules);
                 await Item.updateDocuments([{_id: id[4], system:{rules: rules} }], {pack: db});
                 var descript = (modify)?"no of modifications":"reset to"
-                console.debug([id[4], feat.name, rules, `${descript}: ${rules.length}`]  );
+                console.debug("rules",[id[4], feat.name, rules, `${descript}: ${rules.length}`]  );
             }
         }
     }
     return (modify)?"Wizard Generator has been added":"Wizard Generator has been removed";
 }
-function addFolders(rules){
-    var pathSegs=new Set, maxSegs=1, newRules = []
-    newRules.push({key: "ActiveEffectLike",mode:"override",path: "flags.pf2e.spellcasting.templates._folder",priority:22,value:"folder" })
-    rules.forEach(rule=>{
-        try{
-            var fullPath = rule.path, pt="", pathArr = fullPath.replace("flags.pf2e.spellcasting.templates.","").split(".");
-            if (pathArr.length>maxSegs) maxSegs = pathArr.length;
-            var segAdd = "";pathArr.forEach((seg)=>{pathSegs.add(segAdd=segAdd+pt+seg);pt=".";})
-        }
-        catch(e){
-            console.debug(["skipping this rule",rule])
-            //pass to next rule
-        }    
-    })
-    for (const seg of pathSegs) {
-        var pathArr = seg.split(".");
-        if (pathArr.length < maxSegs) {
-            newRules.push({key: "ActiveEffectLike",mode:"override",path: "flags.pf2e.spellcasting.templates."+seg+"._folder",priority: (22 + pathArr.length),value:"folder" })
-        }
-    }
-    return [...newRules, ...rules]; 
-}
-function removeFolders(rules){var newRules = []; rules.forEach(rule=>{if(rule.value !="folder") newRules.push(rule);});return newRules;}
 function process_direct_commands(originRules, entry, modify){
     var rules = false;
     if(!(originRules.find(selected=>selected.slug==entry.slug))){
@@ -130,7 +106,7 @@ function createLine(label, val, rootSuffix ){
         if (["books","slots"].includes(lastSeg)) {label = `${label}.max`}
         term = `${newSeg}${label}`
     };
-    var obj = {key:"ActiveEffectLike",mode:"override",path:`flags.pf2e.${rootPath}.${rootSuffix}.${term}`,priority:33,value: val} 
+    var obj = {key:"ActiveEffectLike",mode:"override",path:`${rootPath}.${rootSuffix}.${term}`,priority:33,value: val} 
     builtRules.push(obj)
     return obj
 }
@@ -205,9 +181,6 @@ function getSysInfo(actor, spells){
     return info;
 }  
 async function createSpellEntryFromSource(actor,spellbook){
-    //var model = await game.packs.get("pf2e.iconics").getDocument("WNX5OQKPh4uaV7mW")
-    //var model = (await game.packs.get("pf2e-char-builder.actors").getDocument("nWdi6kF9jx389t4R")).spellcasting.collections.get("frasT3foMzziKWnY").entry.clone({actor: actor})
-    //get model of empty spellcasting entry object from compendium actor
     var model = (await game.packs.get("pf2e-char-builder.pf2e-cb-actors").getDocument( 
                             game.packs.get("pf2e-char-builder.pf2e-cb-actors").index.contents[0]._id
                 )).spellcasting.contents[0]
@@ -305,7 +278,7 @@ async function checkForDeityDomainFeats(actor){
         //     add logic for sorcerer bloodline genie
         var feats = [], domain//, slug = actor.class.slug , domains = [];
         var slugs = ["domain-initiate","deitys-domain","advanced-domain","advanced-deitys-domain"];
-        actor.items.forEach(el=>{if(slugs.includes(el.slug)){ //domains.push(el.flags.pf2e.rulesSelections.domainInitiate);
+        actor.items.forEach(el=>{if(slugs.includes(el.slug)){
             feats.push(el)
         }})
         feats.forEach(async (feat, idx) =>{
@@ -320,7 +293,7 @@ async function checkForDeityDomainFeats(actor){
             if ( !( targetRules.some(el=>{return el.path==sourceRule.path} ) ) ){//if rule not embedded 
                 targetRules.push(sourceRule);
                 //targetRules = addFolders(targetRules);
-                await actor.updateEmbeddedDocuments("Item", [{_id: feat.id, "system.rules": targetRules}]) //actor.render();//var template = actor.flags.pf2e.spellcasting.templates;
+                await actor.updateEmbeddedDocuments("Item", [{_id: feat.id, "system.rules": targetRules}]) 
                 console.log(`${modName} - Rule added to domain feat for spellbook`)
             } 
         })
@@ -348,7 +321,7 @@ function createFeatRule(level,name,value) {
    return {
        key: "ActiveEffectLike",
        mode: "override",
-       path: `flags.pf2e.spellcasting.templates.classname.spells.focus.spellList.${level}.${name}`,
+       path: `${rootPath}.classname.spells.focus.spellList.${level}.${name}`,
        priority: 33,
        value: value
    }
@@ -486,18 +459,6 @@ function add_spellcaster_generator(app,html,data){
         processEachSpellBook(data);
         return;
     })
-    //for diagnostic use only
-    /*
-    var feat_html = $('<a class="item-control blue-button" data-action="spellcasting-generate" title="Set Feats" data-type="feats" data-level="" style="width: 100px;"><i class="fas fa-cogs"></i>Set Feats</a>');
-    new_html.after(feat_html)
-    feat_html.on("click", async event=>{
-        //var db = "world.jeff-tests", isSubmit = false
-        //actor = game.actors.get(data.actor._id)
-        //checkifClassDeletedToRemoveSpells(actor,html)
-        //getClassSpellSlots(game.actors.get(data.actor._id))
-        return;
-    })
-    //*/
 }
 
 async function checkifClassDeletedToRemoveSpells(actor,html){
@@ -544,9 +505,6 @@ Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
         checkForDeityDomainFeats(actor); 
     }
 });
-Hooks.on('dropActorSheetData', async (actor, actorSheet, data) => {
-    //await removeAllSpells(actor) 
-});
 Hooks.on('renderActorSheet', (actor, html, data) => {
     actor = game.actors.get(data.actor._id);
     //add and spellbook exists
@@ -554,3 +512,5 @@ Hooks.on('renderActorSheet', (actor, html, data) => {
         if(actor.spellcasting.collections.contents.length != 0)
             checkifClassDeletedToRemoveSpells(actor, html)
 });
+//to do
+//check pathfinder compedium to see if spell rules are in already
