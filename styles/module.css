@@ -129,10 +129,6 @@ button.apply_stats {
 .choice-set-prompt a.help-link i{
     color: black;
 }
-.character .window-content .sheet-content div.remaining.extra {
-    animation: glow 0.5s infinite alternate;
-    margin-left: 90px;
-}
 .creation-tutorial .window-content strong.remaining {
     margin-right: 10px;
     margin-left: 10px;
@@ -197,11 +193,41 @@ button.apply_stats {
     font-weight: bold;
     margin: 0px 5px;
 }
-
-.character .window-content .sheet-content div.remaining.extra {
-    animation: glow 0.5s infinite alternate;
+@keyframes glow-err {
+    from {
+      box-shadow: 0 0 10px -10px #ba2f0c;
+    }
+    to {
+      box-shadow: 0 0 10px 10px #ba2f0c;
+    }
 }
 .character .window-content .sheet-content div.remaining {
+        margin-bottom: 16px;
+        padding: 12px;
+        margin-top: -36px;
+        align-self: flex-start !important;
+        margin-left: 93px;
+}
+.character .window-content .sheet-content .spell-list div.remaining {
+    margin-left: 5px;
+    margin-bottom: 3px;
+    padding: 12px;
+    margin-top: 2px;
+    align-self: flex-start !important;
+}
+.preparation .remaining{
+    padding: 12px;
+}
+.sheet-content .proficiencies div.remaining.extra,
+.preparation .remaining.extra, .spell-list .remaining.extra {
+    animation: glow 0.5s infinite alternate;
+}
+.sheet-content .proficiencies div.remaining.error,
+.preparation .remaining.error, .spell-list .remaining.error {
+    animation: glow-err 0.5s infinite alternate;
+}
+.character .window-content .sheet-content div.remaining,
+.preparation .remaining {
     grid-area: remaining;
     display: flex;
     margin-right: 10px;
@@ -209,32 +235,17 @@ button.apply_stats {
     height: 26px;
     border-radius: 50%;
     background: rgba(68, 55, 48, 0.1);
-    align-self: center;
+    /*align-self: center;*/
     align-items: center;
     justify-content: center;
     text-align: center;
-    margin-top: -21px;
-}
-.character .window-content .sheet-content .extra {
-    display: flex;
-    align-items: center;
     font-size: var(--font-size-12);
-    margin-top: -0.25rem;
 }
 .character .window-content .sheet-content .errTags .tag {
     padding: 9px 0px 8px 10px !important;
 }
 .character .window-content .sheet-content .errTags {
     margin: 3px 0px 3px -4px !important;
-}
-.proficiencies .remaining.extra {
-    align-self: flex-end !important;
-    margin-top: -30px !important;
-}
-.character .window-content .sheet-content .proficiencies div.remaining{
-    margin-right: 39px;
-    margin-bottom: 16px;
-    padding: 5px;
 }
 .errRemaining {
     grid-area: errRemaining;
@@ -309,4 +320,19 @@ span.glowing {
     margin-top: -42px;
     margin-right: 17px;
     width: 240px; 
+}
+li.folder > .folder-header .combat-icon {
+    position: relative;
+    flex: 0 0 20px;
+    margin-left: 3px;
+    text-align: center;
+    color: black;
+    padding-right: 5px;
+}
+span.combat-icon i.fa-solid.fa-circle {
+    font-size: 1.7em;
+}
+span.combat-icon i.fa-solid.fa-user-shield.fa-stack-1x {
+    left: 1px;
+    top: -4px;
 }

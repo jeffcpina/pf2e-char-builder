@@ -17,10 +17,19 @@ async function loadHandleBarTemplates()
         `${tutDir}profs.hbs`,
         `${tutDir}feats.hbs`,
         `${tutDir}spells.hbs`,
+        `${tutDir}stuff.hbs`,
         `${tutDir}bio.hbs`
     ];
     return loadTemplates( templatePaths );
 }
+
+let socket;
+
+Hooks.once("socketlib.ready", () => {
+	socket = socketlib.registerModule(mod);
+	socket.register("changeCanvasImage", changeCanvasImage);
+});
+
 class tutorial extends Application {
     constructor(actor_id) {
         super();
@@ -30,7 +39,7 @@ class tutorial extends Application {
     static get defaultOptions() {
         const options = super.defaultOptions;
         options.template = `modules/${mod}/templates/tutorial/tutorial.hbs`;
-        options.width = 655;
+        options.width = 730;
         options.height = 733;
         options.classes = ['creation-tutorial'];
         options.title = "Creation Tutorial";
@@ -57,6 +66,7 @@ class tutorial extends Application {
         data["feats"]=`${tutDir}feats.hbs`
         data["spells"]=`${tutDir}spells.hbs`
         data["bio"]=`${tutDir}bio.hbs`
+        data["stuff"]=`${tutDir}stuff.hbs`
         data["store_info"]= game.settings.get(mod,'storeVerbage')
         return data;
     }
@@ -65,20 +75,19 @@ class tutorial extends Application {
             var active = $html.find(".sheet-navigation .item.active");
             this.move_windows($html,active);
            })
-           
            $html.find(".next").on("click",event=>{
             var active = $html.find(".sheet-navigation .item.active"),
                 tabName = active.attr("data-tab");
                 if ($(event.currentTarget).hasClass("section") && ($html.find(`.tab.${tabName} .mainsection`).is(":visible")) ) {
-                        var ancestry =  this.charSheet.find('.character-details').find(".ancestry").find(".value").html().toLowerCase();
-                        if (!ancestry && tabName=="ancestry") {
-                            ui.notifications.error("Must choose a valid Ancestry first");
-                            throw ErrorPF2e(`Must choose a valid Ancestry to Continue`)
-                        }
-                        $html.find(`.tab.${tabName} .mainsection`).hide();
-                        $html.find(`.tab.${tabName} .subsection`).show();
-                        this.highlight($html,active);
-                        this.manageResource($html,active);
+                    var ancestry =  this.charSheet.find('.character-details').find(".ancestry").find(".value").html().toLowerCase();
+                    if (!ancestry && tabName=="ancestry") {
+                        ui.notifications.error("Must choose a valid Ancestry first");
+                        throw ErrorPF2e(`Must choose a valid Ancestry to Continue`)
+                    }
+                    $html.find(`.tab.${tabName} .mainsection`).hide();
+                    $html.find(`.tab.${tabName} .subsection`).show();
+                    this.highlight($html,active);
+                    this.manageResource($html,active);
                 } 
                 else {
                     $html.find(`.tab.${tabName} .mainsection`).show();
@@ -91,27 +100,126 @@ class tutorial extends Application {
                     $html.find(`.tab.${tabName} .subsection`).hide();
                 }
            })
+           
            $html.find(".autocheck input").prop( "checked", game.settings.get(mod,'showCharTut') )
            $html.find(".autocheck input").on("click",event=>{
                 game.settings.set(mod,'showCharTut', $html.find(".autocheck input").prop( "checked" ))
            })
+           $html.find(".littleShop").on("click",async event=>{
+            game.journal.getName("Rick's Prospector's Emporium Bazaar").sheet.render(true)
+/*
+                const compendiumBrowser = game.pf2e.compendiumBrowser;
+                var equipmentTab = game.pf2e.compendiumBrowser.tabs.equipment, 
+                filter = await equipmentTab.getFilterData(),
+                l = filter.sliders.level.values,
+                r = filter.checkboxes.rarity.options;
+                l.min = 0;l.max = 1;
+                r.common.selected = true; 
+                r.uncommon.selected = false; 
+                r.rare.selected = false; 
+                r.unique.selected = false;
+                filter.checkboxes.rarity.selected = ["common","uncommon"];
+                game.settings.set(mod,'viewing_store',true)
+                equipmentTab.open(filter);
+            */
+           })
+           if (! game.user.isGM) {
+                this.charSheet.find(".image-container").on("click",async event=>{
+                    const myContent = `URL <input type="text" class="image_url_link">`;
+
+                    new Dialog({
+                    title: "Character Image URL",
+                    content: myContent,
+                    buttons: {
+                        button1: {
+                        label: "Submit",
+                        callback: async () => {
+                            this.save_url_image();
+                        },
+                        icon: `<i class="fas fa-check"></i>`
+                        }
+                    }
+                    }).render(true);
+                });
+            }
+    }
+    async save_url_image(){
+        try { 
+
+            var image_url = $('.image_url_link').val();
+            var userActorId = game.user.character.id, actor = game.actors.get(userActorId),
+                tokens = game.canvas.tokens.ownedTokens;
+            if (! this.isValidUrl(image_url)) throw "Invalid Url";
+
+            var userToken = tokens.find(token=>token.document.actorId == userActorId);
+            userToken = userToken.document;
+
+            await userToken.update({"texture.src": image_url})
+            await actor.update({img: image_url})
+            ui.notifications.info("***  Character Image Changed ***")
+            /*
+                const compendiumBrowser = game.pf2e.compendiumBrowser;
+                var equipmentTab = game.pf2e.compendiumBrowser.tabs.equipment, 
+                filter = await equipmentTab.getFilterData(),
+                l = filter.sliders.level.values,
+                r = filter.checkboxes.rarity.options;
+                l.min = 0;l.max = 1;
+                r.common.selected = true; 
+                r.uncommon.selected = false; 
+                r.rare.selected = false; 
+                r.unique.selected = false;
+                filter.checkboxes.rarity.selected = ["common","uncommon"];
+                game.settings.set(mod,'viewing_store',true)
+                equipmentTab.open(filter);
+            */
+            //var myTile = game.scenes.get(sceneId).tiles.get(iconsId[iconInfo[1]]);
+            //await myTile.update({"texture.src": image_url})
+            //const result = await socket.executeAsGM("changeCanvasImage", image_url, myTile);
+        }
+        catch(e){ui.notifications.error(e);}
+    }
+    getUserCharacters(){
+        var id=game.user.id, myActors = [], iconCnt = 0, curIconId = -1; 
+        var curChar = game.user.character;
+        var compareById = function (a,b) { return (a.id < b.id) ? -1 : (a.id > b.id) ? 1 : 0 }
+        var characters = game.actors.contents.sort(compareById)
+        Object.keys(characters).forEach(key=>{
+            var owners = game.actors.contents[key].ownership;
+            Object.keys(owners).forEach(owner=>{
+                if (id==owner && owners[owner]==3) {
+                    myActors.push(game.actors.contents[key]);
+                    if (curChar.id == game.actors.contents[key].id) curIconId = iconCnt;
+                    iconCnt = iconCnt + 1;
+                }    
+            })
+        })
+        return [myActors , curIconId];
+    }
+    isValidUrl(urlString) {
+        try { 
+            return Boolean(new URL(urlString)); 
+        }
+        catch(e){ 
+            return false; 
+        }
     }
     move_windows($html, active){
         var coord = active.attr("data-coord").split(","),
             $app = $html.closest(".app.creation-tutorial"),
             heading = '';
-            
+                
             $html.find(".tut-head").html(active.attr("title"))
             this.charTabs.activate(active.attr("data-parent-tab"))
             $app.css({"width": coord[2], "height":coord[3]})
             $app.offset({ top: coord[0], left: coord[1] })
             this.tutTabs.activate(active.attr("data-tab"))
+            game.settings.set(mod,'current_tab',active.attr("data-tab"))
 
             this.highlight($html,active);
             this.manageResource($html,active);
     }
     highlight($html,active){
-        this.charSheet.find(".pc h3").removeClass("highlight");
+        this.charSheet.find(".abcd h3").removeClass("highlight");
         var editattr = this.charSheet.find("button.has-unallocated");
         if (! editattr.hasClass("unhighlight")) editattr.addClass("unhighlight")
         var highlight = false;
@@ -119,7 +227,10 @@ class tutorial extends Application {
             case "ancestry":
               if ($html.find(`.tab.${active.attr("data-tab")} .mainsection`).is(":visible"))
                     highlight=".ancestry h3";
-              else  highlight=".heritage h3";
+              else  {
+                highlight=".heritage h3";
+                $html.closest(".app.creation-tutorial").css({"height":535})
+              }
               break;
             case "background":
                 highlight=".background h3";
@@ -210,6 +321,12 @@ class tutorial extends Application {
         //this.close()
     }
 }
+async function changeCanvasImage(image_url,myTile){
+        console.debug(["tiles",myTile,image_url]);
+        await myTile.update({"texture.src": image_url})
+        console.debug(["tiles",myTile,image_url]);
+        return ["titles",myTile,image_url]
+}
 async function delChar(id){
         let d = new Dialog({
             title: "Delete Character?",
@@ -228,33 +345,6 @@ async function delChar(id){
             default: "no"
         });
         await d.render(true);
-}
-async function enterHTMLimage(actor,html){
-    var spellbooks = html.find('.sheet-content').find(".spellcasting").find(".spellcasting-entry")
-    var query = $(".dialog").find(".dialog-content")//.find(".delete-all-spellcasting-dialog")
-    if (spellbooks.length !== 0 && query.length == 0){
-
-        var content = await renderTemplate("systems/pf2e/templates/actors/delete-spellcasting-dialog.hbs");
-        var content = await renderTemplate(`modules/${mod}/templates/actors/delete-spellcasting-dialog.hbs`)
-        let d = new Dialog({
-            title: "Delete All SpellBook?",
-            content: content,
-            buttons: {
-                yes: {
-                icon: '<i class="fas fa-check"></i>',
-                label: "Yes",
-                callback: async () => {await removeAllSpells(actor) }
-                },
-                no: {
-                icon: '<i class="fas fa-times"></i>',
-                label: "No",
-                callback: () => console.log(`${mod} - all spellbooks retained`)
-                }
-            },
-            default: "no"
-        });
-        await d.render(true);
-    }
 }
 
 Hooks.on('rendertutorial', (app, html, data) => {
@@ -281,7 +371,14 @@ Hooks.on('pf2e.systemReady', async () => {
         $(`[data-tab="Collapse or Expand"]`).hide()
         $(`#ui-right a.collapse`).hide()
         $(`#ui-bottom`).hide()
-        $(`#pause.paused`).hide()
+        $(`#pause.paused`).hide();
+        $(`section#settings ul#game-details`).hide();
+        $(`section#settings ul#settings-documentation`).hide();
+        $(`section#settings h2`).hide();
+        $(`h2`).hide();
+        $(`div#settings-documentation`).hide();
+        $(`[data-action="modules"]`).hide()
+
         sidebar.collapse()
     }
     
@@ -303,15 +400,15 @@ async function tutorial_button(app, html, data){
     var id = app.actor.id;
     if (tutorialInstance[id] === undefined) tutorialInstance[id] = new tutorial(id);
 
+    /*
     html.closest('.app').find("div .image-container").click(ev=>{
-        enterHTMLimage(app.actor)
+        deleteAllSpells(app.actor)
     })
+    */
 
     //let delBtn = $(`<a class="del-button"><i class="fas fa-trash"></i>Delete</a>`);
     //delBtn.click(ev => { delChar(id) });
     //delBtn.insertAfter(openBtn);
-
-
 
     let openBtn = $(`<a class="tutorial-drawer"><i class="fas fa-layer-group"></i> Creation Tutorial</a>`);
     openBtn.click(ev => { tutorialInstance[id].openForActor(app, html, data) });
@@ -327,6 +424,16 @@ async function tutorial_button(app, html, data){
 };
 Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
     tutorial_button(app, html, data);
+    if (!game.user.isTrusted && game.settings.get(mod,'charOnly') ) {
+        $(`.inventory-list .item-controls [data-action="edit-item"]`).hide();
+        $(`.inventory-list .item-controls [data-action="delete-item"]`).hide();
+        $(`.inventory-list .item-controls .toggle-identified`).hide();
+        $(`[data-action="add-coins"]`).hide()
+        $(`[data-action="remove-coins"]`).hide()
+        $(`.inventory-list a.decrease`).hide()
+        $(`.inventory-list a.increase`).hide()
+    }
+    if (! game.user.isGM) {game.user.update({character: app.actor})}
 });
 Hooks.on('renderCompendium', (app, html, data) => {
     if ($(".creation-tutorial").length == 1) 
@@ -334,10 +441,90 @@ Hooks.on('renderCompendium', (app, html, data) => {
     //html.offset({ top: 0, left: 756 })
 });
 Hooks.on('renderCompendiumBrowser', (app, html, data) => {
+    console.debug(["tab",game.settings.get(mod,'current_tab')]);
     if ($(".creation-tutorial").length == 1) 
-        app.setPosition({left:765, top: 756, width: 655, height: 470})
+        if (game.settings.get(mod,'current_tab')!="stuff")
+            app.setPosition({left:765, top: 520, width: 655, height: 300})
+        else{
+            app.setPosition({left:765, top: 0, width: 730, height: 670})
+            //console.debug(["stuff"]);
+            app.setPosition({left:765, top: 0, width: 730, height: 670})
+        }
+            
     //html.offset({ top: 489, left: 756, width: 655, height: 470 })
+
+    //style compendium store
+    /*
+    console.debug(["store status", (game.settings.get(mod,'viewing_store'))?"true":"false"])
+    if (game.settings.get(mod,'viewing_store')){
+        console.debug(["check viewStore", "working"])
+        html.find("nav").hide();
+        html.find(`[data-filter-name="rarity"]`).hide();
+        html.find(`[data-filter-name="source"]`).hide();
+        html.find(`[data-filter-name="level"]`).hide();
+        html.find(`.window-title`).html("Luigi's Shop - I got what you need ... forget about it.");
+        game.settings.set(mod,'viewing_store',false)
+    }
+    else {
+      html.find("nav").show();
+      html.find(`[data-filter-name="rarity"]`).show();
+      html.find(`[data-filter-name="source"]`).hide();
+      html.find(`[data-filter-name="level"]`).hide();
+      html.find(`.window-title`).html("Compendium Browser");
+    }
+    */
 })
+
+
+
+Hooks.on('createItem', async (item, status, id) => {addItemsfromkit(item, status, id)});
+Hooks.on('updateItem', async (item, status, id) => {addItemsfromkit(item, status, id)});
+async function addItemsfromkit(item, status, id) {
+    if (item.constructor.name == "ContainerPF2e"){
+        var rule = item.rules[0];
+        if (rule.path == "flags.pf2e.kit.id"){
+            var actor = item.parent;
+            var container = await game.packs.get("pf2e.equipment-srd").getDocument(rule.value);
+            var conItems = container.system.items;
+            var kitList = Object.values(conItems[Object.keys(conItems)[0]].items);
+            var newItems = [];
+            for (let listItem of kitList){
+                var itemId = String(listItem.uuid).split(".")[4];
+                var itemClone = await ((await game.packs.get("pf2e.equipment-srd").getDocuments({_id: itemId})
+                                                ).shift()).clone({"system.containerId": item.id});
+                newItems.push(itemClone)
+                //await actor.createEmbeddedDocuments("Item",[itemClone]);
+                //await actor.updateEmbeddedDocuments("Item",[{_id: itemClone.id, _container: item.id}]);
+            }
+            await actor.createEmbeddedDocuments("Item",newItems);
+            await actor.deleteEmbeddedDocuments([item.id]);
+            console.debug(["createItem",rule.path, kitList, container.id, newItems]);
+        }
+    }
+}
+
+
+Hooks.on('sightRefresh', (app, html) => {
+    var tokens = game.canvas.tokens.placeables;
+    if (!game.user.isGM)for (let token of tokens){ if ( !token.actor.isOwner) {token.visible = false;} }
+    else {
+        var playerId = game.settings.get(mod,'gm_char');
+        for (let token of tokens){
+            //ownersList = Object.keys(token.actor.ownership);
+            if ( ! (Object.keys(token.actor.ownership)).includes(playerId)) token.visible = false;
+                else token.visible = true;
+        }
+    }
+ });
+ Hooks.on('refreshToken', async (app, html) => {
+    if (!game.user.isGM){
+        var userActorId = game.user.character.id, actor = game.actors.get(userActorId),
+                tokens = game.canvas.tokens.ownedTokens,
+                userToken = tokens.find(token=>token.document.actorId == userActorId);
+        userToken = userToken.document;
+        if (userToken.name != actor.name) await userToken.update({name: actor.name})
+    }
+ });
 Hooks.on('renderAttributeBuilder', (app, html) => {
    if ($(".attribute-builder").length){
         var tutWin=$(".creation-tutorial")
@@ -348,16 +535,14 @@ Hooks.on('renderAttributeBuilder', (app, html) => {
         }
    }
 });
-/*
-Hooks.on('closeAttributeBuilder', (app, html) => {
-    var tutWin=$(".creation-tutorial")
-    console.debug(["exist",tutWin.length]);
-    if (tutWin.length){
-        tutWin.find(`.tab.scores`).removeClass("active").hide();
-        tutWin.find(`.tab.profs`).show().addClass("active");
+
+Hooks.on('closeCharacterSheetPF2e', (app, html, data) => {
+    var actorId = app.actor.id;
+    for (const id in ui.windows){ 
+        if (ui.windows[id].id == `tutorial-module-${actorId}`) ui.windows[id].close();
     }
 })
-*/
+
 Hooks.on('renderDialog', (app, html, data) => {
     if (app.title == "Create New Actor")
         if (!game.user.isTrusted )
@@ -369,7 +554,14 @@ Hooks.on('renderDialog', (app, html, data) => {
 let tutorialInstance = [];
 
 //todo 
-//add image dialog to add url image to token
-//Finish landscape library
-//macro to save settings and give a name to it
-//macro not visible to users
+//voice character for merchants
+//check video in books, make sure working
+//add video to tutorial explaining spontanaeous and prepared spells
+//make sure all resource videos are working
+//racial merchants
+
+//add video to tutorial explaining spontanaeous and prepared spells
+//2nd level class feats is featuring archetype as well
+//additonal skills added to count when added by feats.
+//compendium window keeps going back to original shape and location
+

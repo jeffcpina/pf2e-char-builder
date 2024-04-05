@@ -1,38 +1,9 @@
 console.debug("PF2e System | PF2e Character Builder | Started "); 
 export const modName = "PF2e Character Builder";
 const mod = "pf2e-char-builder";
-/*
-var _domParser = new WeakMap;
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", {
-    value,
-    configurable: !0
-});
-var __defProp2 = Object.defineProperty,
-    __defNormalProp = __name((obj, key, value) => key in obj ? __defProp2(obj, key, {
-        enumerable: !0,
-        configurable: !0,
-        writable: !0,
-        value
-    }) : obj[key] = value, "__defNormalProp"),
-    __name2 = __name((target, value) => __defProp2(target, "name", {
-        value,
-        configurable: !0
-    }), "__name"),
-    __publicField = __name((obj, key, value) => (__defNormalProp(obj, typeof key != "symbol" ? key + "" : key, value), value), "__publicField"),
-    __accessCheck = __name((obj, member, msg) => {
-        if (!member.has(obj)) throw TypeError("Cannot " + msg)
-    }, "__accessCheck"),
-    __privateGet = __name((obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj)), "__privateGet"),
-    __privateAdd = __name(
-            (obj, member, value) => {
-                if (member.has(obj)) throw TypeError("Cannot add the same private member more than once");
-                member instanceof WeakSet ? member.add(obj) : member.set(obj, value)
-            }, 
-            "__privateAdd"
-    )
-*/
-/*** end of pf2e functions */
+var gclassPages = ""
+import {addSpelltoSpellbook} from "./spellbuilder.mjs"; 
+
 function add_background_link_to_actor_sheet(html){
     
     var el = html.find(".character-details").find('.background a');
@@ -82,40 +53,140 @@ function add_heritage_link_to_actor_sheet(html){
             return heritageTab.open(filter)
     })
 }
-async function add_language_counter_to_actor_sheet(app,html,data){
-    var lang_title =  html.find('.pc_languages').find(".details-label");
-    var lang_title = html.find(`[data-tag-selector="languages"]`)
+function add_skill_counters_orig(app,html,data){
     var skillTitle = html.find(".tab.proficiencies header").first();
-    console.debug(["anchors",lang_title.length])
-        //language
-        /*
-        var actor=data.actor,classData=data.class;
-        var className=classData.name, uuid=classData.flags.core.sourceId,
-            totLang= actor.system.abilities.int.mod,
-            langChosen = app.object.toObject().system.details.languages.value.length,
-            langAvail=totLang-langChosen
-        if(langAvail!=0)
-        lang_title.before((langAvail>0)?`<div class="remaining extra">${langAvail}</div>`:
-                        `<span class='tags addLangs errTags'><span class='tag'>Too many languagues. Reduce by ${Math.abs(langAvail)}</span></span>`)
-        */                
+    var loreTitle = html.find('.lores-list').prev("header");              
         //skills
-        var actor=data.actor,classData=data.class;
+        var actor=data.actor,classData=data.class,skillsFeats=0,skillsFeatLoreCount=0;
         var className=classData.name, uuid=classData.flags.core.sourceId;
-        const [type2,scope,packId,id] = uuid.split(".");
+        //const [type2,scope,packId,id] = uuid.split(".");
+        var skillsFeats = getSkillFeats(app.actor);
+       
+        app.actor.rules.forEach(rule=>{if (rule.key=="lore") skillsFeatLoreCount+=1})
         
-        var skillsBkgd=data.background.system.trainedSkills.value.length, 
+        
+        var DietyClassed =  ["Cleric","Champion"],
+            skillsDiety = (DietyClassed.includes(className)) ? 1 : 0,
+            skillsBkgd=data.background.system.trainedSkills.value.length, 
             skillsBkgdLore =(data.background.system.trainedSkills.trainedLore!="") ? 1 : 0,
-            skillsClassTot = classData.system.trainedSkills.additional,
+            skillsClass= classData.system.trainedSkills.value.length + 
+                         classData.system.trainedSkills.additional,
             skillsBonus = actor.system.abilities.int.mod,
-            skillsTot = skillsBkgd + skillsClassTot + skillsBonus + skillsBkgdLore;
-        var skillCurr=0;Object.entries(actor.system.skills).forEach(
-            ([key, skill])=>{skillCurr=skillCurr+((skill.modifiers[1].label!="Untrained")?1:0)}
-            );
+            skillLoreTotal = skillsBkgdLore + skillsFeatLoreCount,
+            skillsTot = skillsBkgd + skillsBkgdLore + 
+                        skillsClass + skillsBonus + skillsDiety + 
+                        skillsFeats + skillsFeatLoreCount;
+
+        var skillCurr=0,skillCurrLore=0;
+        Object.entries(actor.system.skills).forEach(
+            ([key, skill])=>{
+                skillCurr=skillCurr+((skill.modifiers[1].label!="Untrained")?1:0);
+                skillCurrLore=skillCurrLore
+                    +((skill.modifiers[1].label!="Untrained" && skill?.lore)
+                        ?1:0);
+            }
+        );
         var skillsLeft=skillsTot-skillCurr;
+        var skillsLoreLeft = skillLoreTotal - skillCurrLore;
+        /*
+        console.debug(["SkillsTotBreakdown", "bkgnd",skillsBkgd, skillsBkgdLore,
+                        "class", skillsClass, "int", skillsBonus, "diety", skillsDiety, 
+                        "feats", skillsFeats, skillsFeatLoreCount ])
+        console.debug(["SkillsSummaryBreakdown", skillsTot - skillLoreTotal, 
+                        skillLoreTotal ])
+        console.debug(["SkillsSummary", skillsTot, skillCurr, skillsLeft, 
+                                        skillLoreTotal, skillCurrLore])
+        */
+       
+        var datatooltip = (skillsBkgd != 0) ? ` Backgrd: + ${skillsBkgd}` : "";
+        datatooltip += (skillsClass != 0) ? ` Class: + ${skillsClass}` : "";
+        datatooltip += (skillsBonus != 0) ? ` Intel: + ${skillsBonus}` : "";
+        datatooltip += (skillsDiety != 0) ? ` Deity: + ${skillsDiety}` : "";
+        datatooltip = ` data-toottip="${datatooltip}" `;
+        
         if (skillsLeft!=0) 
-            skillTitle.after((skillsLeft>0)?`<div class="remaining extra">${skillsLeft}</div>`:
-                        `<div class='errRemaining'>Too many skills. Limit of ${skillsTot} Remove ${Math.abs(skillsLeft)}</div>`)  
+        skillTitle.after((skillsLeft>0)
+            ?`<div class="remaining extra">${skillsLeft}</div>`
+            :`<div class="remaining error">${skillsLeft}</div>`)  
+        
+        if (skillsLoreLeft!=0) 
+        loreTitle.after((skillsLoreLeft>0)
+            ?`<div class="remaining extra loreTitle">${skillsLoreLeft}</div>`
+            :`<div class='remaining error'>${skillsLoreLeft}<div>`)
+
+        //*/    
+        //{"key":"ActiveEffectLike","mode":"add","path":"flags.pf2e.feats.skills.lore","value":{"name":"{item|flags.pf2e.rulesSelections.clan.skillThree}"}}
+        //{"key":"ActiveEffectLike","mode":"add","path":"flags.pf2e.lore","value":{"name":"{item|flags.pf2e.rulesSelections.clan.skillThree}"}}
+        //{"key":"ActiveEffectLike","mode":"add","path":"rules","value":{"key":"lore","name":"Add Lore"},"label":"direct_tx","id":"Compendium.pf2e.feats-srd.Item.kBxgo589ctJsBwJj"}
+        //Too many skills. Limit of ${skillsTot} Remove ${Math.abs(skillsLeft)}  
+        //<div class='errRemaining'${datatooltip}></div>`) 
+}
+function add_skill_counters(app,html,data){             
+        var actor=data.actor,classData=data.class,skills={},className=classData.name,DietyClassed=["Cleric","Champion"];
+        skills.source = {}, skills.total = {}, skills.current = {}, skills.remaining = {}, 
+        skills.source.feats=0, skills.source.lore=0;
+        skills.source.feats = getSkillFeats(app.actor);
+        app.actor.rules.forEach(rule=>{if (rule.key=="lore") skills.source.lore+=1})
+        skills.source.deity = (DietyClassed.includes(className)) ? 1 : 0,
+        skills.source.bkgd=data.background.system.trainedSkills.value.length, 
+        skills.source.bkgdLore =(data.background.system.trainedSkills.trainedLore!="") ? 1 : 0,
+        skills.source.class= classData.system.trainedSkills.value.length + 
+                        classData.system.trainedSkills.additional,
+        skills.source.bonus = actor.system.abilities.int.mod,
+        skills.total.lore = skills.source.bkgdLore + skills.source.lore,
+        skills.total.all = skills.source.bkgd + skills.source.bkgdLore + 
+                    skills.source.class + skills.source.bonus + skills.source.deity + 
+                    skills.source.feats + skills.source.lore;
+        skills.current.value=0,skills.current.lore=0;
+        Object.entries(actor.system.skills).forEach(
+            ([key, skill])=>{
+                skills.current.value=skills.current.value+((skill.modifiers[1].label!="Untrained")?1:0);
+                skills.current.lore=skills.current.lore + ((skill.modifiers[1].label!="Untrained" && skill?.lore)?1:0);
+            }
+        );
+        skills.remaining.value=skills.total.all-skills.current.value;
+        skills.remaining.lore = skills.total.lore - skills.current.lore;
+        skills.remaining.lore = (skills.remaining.lore < 0) ? 0 : skills.remaining.lore
+        console.log(["skills",skills])
+       display_skill_counts(skills,html)
+}
+function display_skill_counts(skills,html){
+    var skillTitle = html.find(".tab.proficiencies header").first();
+    var loreTitle = html.find('.lores-list').prev("header"); 
+    var coretip = (skills.source.bkgd != 0) ? ` Backgrd: + ${skills.source.bkgd}` : "";
+    coretip += (skills.source.class != 0) ? ` Class: + ${skills.source.class}` : "";
+    coretip += (skills.source.bonus != 0) ? ` Intel: + ${skills.source.bonus}` : "";
+    coretip += (skills.source.feats != 0) ? ` Feats: + ${skills.source.feats}` : "";
+    coretip += (skills.source.deity != 0) ? ` Deity: + ${skills.source.deity}` : "";
+    skillTitle.attr('data-tooltip', coretip )
+    var loretip = (skills.source.bkgdLore != 0) ? ` Backgrd: + ${skills.source.bkgdLore}` : "";
+    loretip += (skills.source.lore != 0) ? ` Feats: + ${skills.source.lore}` : "";
+    loreTitle.attr('data-tooltip', loretip )
+
+    if (skills.remaining.value!=0) 
+    skillTitle.after((skills.remaining.value>0)
+        ?`<div class="remaining extra">${skills.remaining.value}</div>`
+        :`<div class="remaining error">${skills.remaining.value}</div>`)  
+    if (skills.remaining.lore!=0) 
+    loreTitle.after((skills.remaining.lore>0)
+        ?`<div class="remaining extra loreTitle">${skills.remaining.lore}</div>`
+        :`<div class='remaining error'>${skills.remaining.lore}<div>`)
+}
+function getSkillFeats(actor){
     
+    var items = actor.items.contents, totFeats = 0;
+    items.forEach(item=>{
+        if (item.constructor.name == "FeatPF2e") { 
+            item.rules.forEach(
+                rule=>{ 
+                    var path = rule?.path; 
+                    if (path != undefined) if (path.startsWith("system.skills")) 
+                        totFeats = totFeats + rule.value;  
+                }
+            ) 
+        } 
+    })
+    return totFeats;
 }
 async function add_boost_indicator_to_sheet(html,data){
     var totAvailBack=0,totAvailAncestry=0,scoresLeft=0, allowedBoosts = data.actor.system.build.attributes.allowedBoosts;
@@ -127,38 +198,261 @@ async function add_boost_indicator_to_sheet(html,data){
     if (scoresLeft != 0)html.find(".tab.character h3.header button").addClass("highlight");
     console.debug['scores',allowedBoosts,boosts,scoresLeft]
 }
-async function add_spell_counter_to_prep_sheet(html,limit,spellcount){
-    var title =  html.find(".sheet-header"), availCantrip = (spellcount !== null) ? limit.cantrip - spellcount[0].length: limit.cantrip,total=0;
-    if (spellcount !== null) Object.values(spellcount).forEach(element=>total += element.length);
-    var availSpells = (spellcount !== null) ? limit.spells - (total - spellcount[0].length) : limit.spells;
-
-    if (! isNaN(availCantrip))
-        if(availCantrip!=0)
-            title.append((availCantrip>0)?`<p><span class='tags addspells'><span class='tag'>choose ${availCantrip} cantrip(s)</span></p>`:
-                            `<p><span class='tags addspells'><span class='tag'>Too many skills. Limit of ${limit.cantrip} cantrip(s)  ${availCantrip}</span></p>`)
-
-    if (! isNaN(availSpells))
-        if(availSpells!=0)
-        title.append((availSpells>0)?`<p><span class='tags addspells'><span class='tag'>choose ${availSpells} spell(s)</span></p>`:
-                        `<p><span class='tags addspells'><span class='tag'>Too many skills. Limit of ${limit.spells} spell(s)  ${availSpells}</span></p>`)
+// https://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format/32202320#32202320
+// First, checks if it isn't implemented yet.
+if (!String.prototype.format) {
+    String.prototype.format = function() {
+      var args = arguments;
+      return this.replace(/{(\d+)}/g, function(match, number) { 
+        return typeof args[number] != 'undefined'
+          ? args[number]
+          : match
+        ;
+      });
+    };
 }
+async function updateActorSpells(actor, data, diff, id){
+    //console.debug(["update Actor",actor, data, diff, id])
 
+    var spellbooks = actor.spellcasting.contents
+    for (let book of spellbooks) {
+        if (actor.level > 1) {
+            await updateSpellBooks(book.id,book.system.slug?.value,actor)
+        }
+    }
+}
+async function add_spell_counters_to_actor_sheet(app,html){
+    var actor = app.actor, spellbooks = actor.spellcasting.contents, title = {} 
+    for (let book of spellbooks) {
+        title = html.find(`.spellbook-pane .spellcasting-entry[data-item-id="${book.id}"] .spell-list`)
+        await add_spell_counter_to_sheet(title,book.id,book.system.slug?.value,actor,"actor")
+    }
+}
+async function updateSpellBooks(id,slug,actor){
+    var book = await actor.spellcasting.get(id)
+    var data = slug.split("-"), 
+        spellbook = actor.flags.pf2e.spellcasting.templates[data[0]].spells[data[1]],
+        spellsLimits = (spellbook?.books != undefined) ? spellbook.books : {}, bookItems = []
+    
+    //console.log(["info",slug, data[0],data[1],spellsLimits,spellbook,id])
+    spellsLimits.slots = actor.spellcasting.get(id).system.slots,
+    spellsLimits.id = spellbook.id = id, spellsLimits.slug = spellbook.slug = slug, 
+    spellsLimits.class = spellbook.class = data[0], spellsLimits.name = spellbook.name = data[1],
+    spellsLimits.type = spellbook.type = book.system.prepared.value, 
+    spellsLimits.perRank = spellbook?.perRank
+    
+    await getSlots(actor,id,spellsLimits) 
+    await addSpelltoSpellbook(spellbook,actor,!0)
+}
+async function getSlots(actor,id,books){
+    var data = {}
+    //if (spellbook[bookName].books?.perLevel == "perLevel") getSlotsPerLevel(actor,id,spellsLimits)
+    if (books.name=="main") data = await getClassSpellSlots(actor,id)
+        else if (books?.perRank != undefined) data = await getSlotsPerRank(actor,books)
+            else data= await getSlotsGeneral(actor,id,books)    
+    if (! $.isEmptyObject(data)){ 
+        data["_id"]=id;  
+        await actor.updateEmbeddedDocuments("Item", [data]) 
+    }
+    return data
+}
+async function getSlotsGeneral(actor,id, limits){
+    var level = actor.level, topLevel = limits.totals, book = limits.slots, 
+    data = {}, idx = Math.ceil((actor.level)/2), amt 
+    if (limits[`slotTop`]?.max != undefined) {
+        if (limits[`slot${idx}`] == undefined) limits[`slot${idx}`] ={}
+        limits[`slot${idx}`].max = limits[`slotTop`].max
+    }
+    for (let i = 1; i < 10; i++) {
+        amt=(limits[`slot${i}`]?.max == undefined)? 0 : limits[`slot${i}`].max
+        if (book[`slot${i}`].max != amt){
+            data[`system.slots.slot${i}.max`] = amt; data[`system.slots.slot${i}.value`] = amt ;
+        }     
+    }
+    //console.debug(["general",limits.name,data])
+    return data;
+}
+async function getSlotsPerRank(actor,limits){
+    var level = actor.level, topLevel = limits.totals, book = limits.slots , data = {}
+    for (let i = 1; i < 11; i++) {
+        if (Math.ceil((actor.level)/2) <= i) { 
+            if (book[`slot${i}`].max != limits.perRank){
+                data[`system.slots.slot${i}.max`] = limits.perRank; data[`system.slots.slot${i}.value`] = limits.perRank;
+            }
+                
+        }
+    }
+    return data;
+}
+async function getClassSpellSlots(actor,id){
+    //get journal of class retrive spell qty and level info
+    var data = {}, lvl = 0,  book = await actor.spellcasting.get(id).system.slots,
+    journal = actor.class.system.description.value,
+    start = journal.indexOf("@UUID"), word=journal.substring(start,journal.indexOf("]",start)), info=word.split(".");
+    var desc = gclassPages.get(info[6]).text.content,
+    $div = $(document.createElement("div")).html(desc).find("table"),
+    $row = $div.find('th:contains("Cantrips")').closest("table").find("tr:eq("+actor.level+")"), $colData = $row.find("td");
+    $colData.each((idx,el)=>{//cycle thru columns
+        var spellAmt=el.innerHTML; spellAmt=spellAmt.substr(0,1); 
+        if (lvl!=0){
+            var slotNo = "slot" + (lvl - 1);
+            if (isNaN(spellAmt)) spellAmt = 0;
+            if (book[slotNo].max != spellAmt) 
+                {data[`system.slots.slot${lvl-1}.max`] = spellAmt; data[`system.slots.slot${lvl-1}.value`] = spellAmt;}
+        }
+        lvl += 1;
+    })
+    return data
+} 
+async function add_spell_counter_to_sheet(html,id,slug,actor,sheet="spellbook"){
+    if (slug==undefined) return
+    //booklimits, slotlimits,slots
+    var book = actor.spellcasting.get(id), spellBookType = book.system.prepared.value
+    if(sheet=="spellbook" && spellBookType!="prepared") return;
+    if(sheet=="actor" && spellBookType!="spontaneous") return;
+
+    var data = slug.split("-"), className=data[0], bookName=data[1], spellCount = [],
+    spellbooks = actor.flags.pf2e.spellcasting.templates[className].spells, spellbook = spellbooks[bookName],
+    spellsLimits = (spellbook?.books != undefined) ? spellbook.books : {}
+    spellsLimits.type = spellBookType,spellsLimits.name = bookName,spellsLimits.class = className;
+    spellsLimits.slots = actor.spellcasting.get(id).system.slots, spellsLimits.id = id,
+    spellsLimits.perRank = spellbook?.perRank
+    
+    var limits = await getLimits(spellsLimits,actor,id), 
+    spellCount = get_spell_count(id,actor), 
+    avail = get_avail_spells(limits,spellCount)  
+    avail.type = spellBookType,avail.slots = book.system.slots,avail.search = spellbook?.search,
+    avail.name = bookName, avail.class = className
+    
+    if (avail.name == "font") return
+    display_prep_counters(html,actor,avail)
+}
+async function getLimits(limits,actor,id){
+    var idx="", idx2="", slots=limits.slots, max=0, bookLimits = deepClone(limits)
+    if(actor.level == 1 && bookLimits.book0 != undefined || (bookLimits.type=="prepared" && bookLimits.name == "main") ) return bookLimits;
+    if(bookLimits.totals != undefined) return bookLimits
+    for (let i = 0; i < 11; i++) {
+        idx = "book"+i; idx2 = "slot"+i
+        //if (slots[idx2] != undefined) {
+            if (bookLimits[idx] == undefined) bookLimits[idx]={};
+            if (bookLimits.perRank && i > 1) 
+                max = (i <= Math.ceil((actor.level)/2)) ? bookLimits.perRank : 0
+                else 
+                    max = (bookLimits[idx].max > slots[idx2].max) ? bookLimits[idx].max : slots[idx2].max
+            bookLimits[idx].max = max
+        //}
+    }
+    return bookLimits
+}
+function get_spell_count(id,actor){
+    var entries = actor.spellcasting.get(id).spells.contents, spellCount = [];
+    entries.forEach(spell=>{
+        if (!spell.system.isBonus){
+            var rank = (spell.isCantrip) ? 0 : spell.rank;
+            if (spellCount[rank]==undefined) spellCount[rank] = 0
+            spellCount[rank] += 1
+        }
+    })
+    for (let i = 0; i < 10; i++) 
+        {spellCount[i]  = (spellCount[i] != undefined) ? spellCount[i] : 0;}
+    
+    return spellCount;
+}
+function get_avail_spells(limits,spellCount){
+    var avail = {};
+    for (let i = 0; i < 10; i++) {
+        if (limits[`book${i}`] == undefined) {limits[`book${i}`]={"max":0}}
+        if (limits[`book${i}`].max != 0) avail[`spells${i}`] = limits[`book${i}`].max - spellCount[i]
+    }   
+    avail.total = limits.totals, 
+    avail.addperlevel = avail.total - (spellCount[0] + spellCount[1]);
+    avail.cantriplimit = limits.book0.max;
+    return avail
+}
+function display_prep_counters(html,actor,avail){
+    var display = `<div class="remaining {0}">{1}</div>`, level=actor.level,
+        displayCantrip = 
+        `<p><span class='tags addspells'>
+                <span class='tag'>
+                    Minimum of  {0} cantrips is required.
+                    Please add {1} more
+                </span>
+            </span>
+        </p>`,idx=0, idx2=0, spellLoc = [],
+        extraBrowser = `<a data-action="" data-tooltip="Browse Bloodline Spells" ><i class="fa-solid fa-fw fa-book"></i></a>`;
+    for (let i = 0; i < 11; i++) spellLoc[i] = html.find(".header-row").eq(i).find(".item-controls")
+    if (avail.type == "prepared" && level != 1 && avail.name == "main"){
+        if( isNaN(avail.addperlevel)) return
+        if(avail.addperlevel!=0)
+            html.prepend((avail.addperlevel>0)
+                ?display.format("extra",avail.addperlevel)
+                :display.format("error",avail.addperlevel)
+        )                        
+        if(avail.spells0 > 0) html.prepend(
+            displayCantrip.format(avail.cantriplimit,avail.spells0)
+        )  
+    }
+    else {
+        for (let i = 0; i < 10; i++) {
+            idx = "spells"+i;
+            if(avail[idx] !=0 && avail[idx] != undefined)
+                spellLoc[i].prepend((avail[idx]  >0)
+                    ?display.format("extra",avail[idx] )
+                    :display.format("error",avail[idx] )
+            ) 
+        }
+    }
+    if (avail?.search){
+        var searchButton = html.find('[data-action="browse-spells"]')
+        if ((avail.class != actor.class.name.toLowerCase()) && avail.class == "sorcerer"){
+            var newButton=$(extraBrowser);
+            newButton.on("click", async event=>{
+                var item = await game.packs.get("pf2e.classfeatures").getDocument(avail.search);
+                return item.sheet.render(!0)
+            })
+            searchButton.before(newButton)
+        }
+        else {
+            if (avail.class != "sorcerer"){
+                searchButton.attr("data-action","");
+                searchButton.on("click", async event=>{
+                    var item = await game.packs.get("pf2e.classfeatures").getDocument(avail.search);
+                    return item.sheet.render(!0)
+                })
+            }
+        }
+        
+    }
+}
 
 //==========================
 // Hooks
 //==========================
 
-Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
+Hooks.on('updateActor', async (app, html, data, id) => {
+    if (app.constructor == "CharacterSheetPF2e")
+            updateActorSpells(app, html, data, id)
+})
+Hooks.on('renderCharacterSheetPF2e', async (app, html, data) => {
+    //if (! game.user.isGM) 
+        html.find('.spellbook-pane [data-action="create-item"]').hide();
     if (game.pf2e.compendiumBrowser.tabs.heritage != undefined) {
         add_heritage_link_to_actor_sheet(html);
         add_deity_link_to_actor_sheet(html)
         add_background_link_to_actor_sheet(html)
     }
     if((data.class !== null) && (data.ancestry !== null) && (data.background !== null) && (data.heritage !== null)){
-        add_language_counter_to_actor_sheet(app, html,data);
+        add_skill_counters(app,html,data);
         add_boost_indicator_to_sheet(html, data);
+        if (gclassPages == "") gclassPages =  await getClassJournals() 
+        if (game.settings.get(mod,'isCompiled')) add_spell_counters_to_actor_sheet(app,html)
     }    
 });
+async function getClassJournals(){
+    var pf2eJournals =  game.packs.get("pf2e.journals")
+    var classJournal =  await pf2eJournals.getDocument("kzxu2dI7tFxv6Ix6")
+    return classJournal.getEmbeddedCollection("pages") 
+}
 Hooks.on('renderBaseTagSelector', async (app,html,data) => {
     //modifying language pulldown on char sheet
     if (data.title == "Languages"){
@@ -193,6 +487,54 @@ Hooks.on('renderBaseTagSelector', async (app,html,data) => {
     }
     
  })
+
+Hooks.on('renderDocumentSheet', async (app,html,data) => {
+    if ( (data.document?.id == "bBorcAR1WtUTn14V")){
+        if (! game.user.isGM) {
+            var charName = "",curClass = game.user.character.class?.name;
+            charName = game.user.character.name;
+            console.debug(["char",curClass]);
+            if (curClass != undefined){
+                var tagClass="";
+                const fighter = ["Fighter", "Champion"]; 
+                const cleric = ["Cleric", "Druid", "Thaumaturge"]; 
+                const alchemist = ["Inventor", "Alchemist"]; 
+                const bard = ["Bard"]; 
+                const caster = ["Sorcerer", "Psychic","Wizard","Summoner"];   
+                const gun = ["Gunslinger"];   
+                const oracle = ["Investigator", "Kineticist","Oracle","Witch"];   
+                const ranger = ["Ranger", "Magus", "Barbarian"];   
+                const rogue = ["Rogue", "Swashbuckler"];   
+                const monk = ["Monk"];   
+                
+                if (fighter.includes(curClass)){tagClass=".fighter"} 
+                else if (cleric.includes(curClass)){ tagClass=".cleric";} 
+                else if (alchemist.includes(curClass)){tagClass=".alchemist";} 
+                else if (bard.includes(curClass)){tagClass=".bard";} 
+                else if (caster.includes(curClass)){tagClass=".wiz";} 
+                else if (gun.includes(curClass)){tagClass=".gun";} 
+                else if (oracle.includes(curClass)){tagClass=".oracle";} 
+                else if (ranger.includes(curClass)){tagClass=".ranger";} 
+                else if (monk.includes(curClass)){tagClass=".monk";} 
+                else if (rogue.includes(curClass)){tagClass=".rogue";}
+    
+                html.find(".tagclass").hide();
+                if (tagClass!=""){
+                     html.find(tagClass).show();
+                }  
+                if (curClass!="") html.find(".prof_name").html(curClass);   
+                if (charName!="") html.find(".char_name").html(charName);
+                html.find("#no-shops").hide();
+            }
+            else {
+                html.find("#the-shops").hide();
+            }
+
+
+        }
+
+    }
+})
 Hooks.on('renderJournalSheetPF2e', async (app,html,data) => {
     if ( (data.document.id == "shaOL1XYgNiYPUWl")){
         if(inOptions==true) {
@@ -207,6 +549,14 @@ Hooks.on('renderJournalSheetPF2e', async (app,html,data) => {
             html.find("aside").show();
         }
     }
+    
+    if ( (data.document.id == "f9pD1eiEm5DHR5vJ")){
+            //html.css({"min-width": "350px"});
+            //html.width("350");
+            html.find("aside").hide(); 
+
+    }
+    html.find(".tagclass").hide();
 }) 
 Hooks.on('closeChoiceSetPrompt', async (app,html,data) => { 
     if(helpApp!="") {
@@ -215,6 +565,162 @@ Hooks.on('closeChoiceSetPrompt', async (app,html,data) => {
     }
     if (inOptions==true) inOptions=false;
 }) 
+Hooks.on('createItem', async (app,html,data) => { 
+    if (app.constructor.name == "FeatPF2e")  modSkillLore(app,"add");
+}) 
+Hooks.on('deleteItem', async (app,html,data) => { 
+    if (app.constructor.name == "FeatPF2e")  modSkillLore(app,"del");
+}) 
+Hooks.on('preCreateItem', async (app,html,data) => { 
+    if (app.constructor.name == "BackgroundPF2e")
+        if (app.system.trainedLore != "") 
+            modeSingleLore(app.actor,"add",`${app.system.trainedLore}`);
+}) 
+Hooks.on('preDeleteItem', async (app,html,data) => { 
+    if (app.constructor.name == "BackgroundPF2e")
+        if (app.system.trainedLore != "") 
+            modeSingleLore(app.actor, "del",`${app.system.trainedLore}`);  
+}) 
+function modSkillLore(app, action) {
+    var actor=app.actor, skills = Object.values(actor.skills), lores = getLore(app);
+    if (lores.length == 0 ) return
+    lores.forEach(async lore=>{
+        var loreFound = actor.items.getName(lore);
+        if (action=="add" && lore != undefined) modeSingleLore(actor,action,lore);
+        if (action=="del" && loreFound) modeSingleLore(actor, action,lore);
+    })
+}
+function getLore(app){
+    var loreFound = [];
+    app.rules.forEach(rule=>{
+        if (rule.value?.key == "lore") loreFound.push(rule.value.name);  
+    })
+    return loreFound;
+}
+async function modeSingleLore(actor, action,loreName){
+    if (action=="add") {
+        console.debug(["lore check", "name", loreName])
+        var newLoreSkill = 
+            await actor.createEmbeddedDocuments("Item",[{"type": "lore","name": loreName,}]);
+        newLoreSkill = newLoreSkill.shift();
+        await newLoreSkill.update({"system.proficient.value":1})
+        console.debug([`${loreName} was added`]);
+    }
+    if (action=="del") {
+        var loreFound = actor.items.contents.find(
+            item=>(item.name==loreName && item.type=="lore")
+        )
+        if (loreFound) {
+            await actor.deleteEmbeddedDocuments("Item", [loreFound.id]);
+            console.debug([`${loreName} was deleted`]);
+        }
+    }
+}
+Hooks.on('renderSpellPreparationSheet', async (app,html,data) => { 
+    var id = data.entry.id,
+        slug = data.actor.spellcasting.get(data.entry.id).system.slug.value,
+        title = html.find(".spell-list")
+        //if (! game.user.isGM) 
+            html.find('[data-action="create-spell"]').hide();
+
+    add_spell_counter_to_sheet(title, id, slug, data.actor)
+})
+Hooks.on('getActorDirectoryFolderContext', async (html,context) => { 
+
+    var newContext = {
+        "name":"Analyze for Combat","icon":'<i class="fa-solid fa-user-shield"></i>',"condition":true,
+        "callback": async function(html){
+            var folderId = html.closest("[data-folder-id]").attr("data-folder-id");
+            var folder = game.folders.get(folderId)
+            //await folder.unsetFlag(mod,"combat",true)
+            var flag = folder.getFlag(mod,"combat")
+            await folder.setFlag(mod,"combat",(flag==true)?false:true)
+            //folder.flags.combat = (folder.flags.combat) ? false : true;
+            ui.actors.render()
+            console.log(["**** folder context",folderId,folder,folder.flags])
+        }
+    }
+    context.push(newContext)
+    console.debug(["*** context"])
+})
+Hooks.on('renderActorDirectoryPF2e', async (app,html,data) => {
+    folderAnaysis(html.find(".directory-item.folder").toArray(),data.activeParty.members)
+ })
+ function folderAnaysis(folders,party){
+    var icon = '<span class="combat-icon fa-stack fa-1x"><i class="fa-solid fa-user-shield fa-stack-1x" style="color: {0};"> {1}</i><i class="fa-solid fa-circle"></i></span>'
+    folders.forEach(folder=>{
+        var qfolder = $(folder).find("header")      
+        var folderId = qfolder.closest("[data-folder-id]").attr("data-folder-id");
+        var folderObj = game.folders.get(folderId);
+        var anchorIcon = qfolder.closest("[data-folder-id]").find(".create-entry")
+        if (folderObj.getFlag(mod,"combat")==true) {
+            var data = getCombatCategory(folderObj.contents,party)
+            console.debug(["combat analysis",data])
+            anchorIcon.before(icon.format(data.color,data.level))
+        }
+        else qfolder.find(".combat-icon").remove()    
+        //var folderTitle = qfolder.find("h3").html();
+        //console.debug(["qfolder",folder, anchorIcon.length,folderId,folderTitle,folderObj.flags?.combat,folderObj,folderObj.flags])//qfolder.html()
+        //console.debug(["qfolder",folderId,folderObj,party])//qfolder.html()
+    })
+    //<i class="fa-solid fa-hand-fist"></i>
+    //console.debug(["**** renderActDir"])
+ }
+ function getCombatCategory(enemy,party){
+    if (enemy==null || party == null) return null
+    var combat = {}; combat.threat = 0; combat.color = "green"
+    var scale ={"Trivial":{"value":40,"color":"green"},"Low":{"value":60,"color":"yellow"} ,"Moderate":{"value":80,"color":"orange"},"Severe":{"value":120,"color":"red"},"Extreme":{"value":160,"color":"white"}}
+    combat.party = getPartyStats(party);
+    combat.enemy = getEnemyValue(enemy,combat.party.factor)
+    for (let idx of Object.keys(scale)){
+        if (scale[idx].value > combat.enemy.total) {
+            combat.threat = idx
+            combat.color = scale[idx].color
+            break
+        }
+    }
+    combat.level = combat.enemy.avg
+    return combat
+ }
+ function getEnemyValue(data,party){    
+    var scale =[10,15,20,30,40,60,80,120,160], opp={}, count=0
+    opp.points = [], opp.total = 0, opp.levels = 0
+    data.forEach(npc=>{
+        count+=1
+        var diff = (npc.level - party < -4) ? -4 : npc.level - party
+        var idx = diff + 4;
+        var points = scale[idx]
+        opp.points.push(points)
+        opp.total+= points
+        opp.levels+=npc.level
+    })
+    opp.avg = Math.round(opp.levels/count)
+    return opp
+ }
+ function getPartyStats(data){
+    var party = {}, count = 0, highlevel = 0, lowlevel = 99, cat=0; 
+    party.levels = [], party.cat = 0, party.addLevels = 0
+    data.forEach(char=>{
+        count += 1
+        cat +=char.level
+        party.levels.push(char.level)
+        if (highlevel<char.level) highlevel = char.level
+        if (lowlevel>char.level) lowlevel = char.level
+    })
+    party.cat = party.avg = cat/count
+    party.spread = highlevel - lowlevel
+    party.qty = count;
+    if(party.spread != 0){
+        if(party.spread > 1) party.cat = Math.round(party.cat)
+        else {
+            var remainder = party.cat %1
+            party.cat = lowlevel
+            if (remainder<.5) party.levels.forEach(level=>party.addLevels += level-lowlevel )
+        }
+    }
+    party.factor = party.qty + party.addLevels
+    return party
+ }
 Hooks.on('renderItemSheet', (app, html, data) => {
     let showBtn = $(`<a class="show-compendium-button" alt="display document" data-tooltip="Display Document Link on Chat" ><i class="fa fa-eye"></i></a>`);
     html.closest('.app').find('.show-compendium-button').remove();
@@ -303,14 +809,8 @@ Hooks.on('renderItemSheet', (app, html, data) => {
         vidBtn.appendTo(header);
     }
 
-    console.debug(["id",app.object.name, html.find('.sheet-header').length])
-});
-Hooks.on('renderSpellPreparationSheet', async (app,html,data) => { 
-    var id = data.entry.id, spellbook = Object.entries(data.document.spellcasting),
-    entries = spellbook[0][1], book = entries.get(id).entry.spells, limit = entries.get(id).entry.system.prepared,
-    spells = await book.getSpellData(), spellcount = spells.spellPrepList;
-    add_spell_counter_to_prep_sheet(html,limit, spellcount)
-}) 
+   //console.debug(["id",app.object.name, html.find('.sheet-header').length, app,html,data])
+}); 
 Hooks.on('renderCompendium', (app, html, data) => {
     //hover over functionality on compendium folders
     if (app.collection.metadata.path == "systems/pf2e/packs/classes.db" || app.collection.metadata.path == "systems/pf2e/packs/ancestries.db") {
@@ -387,5 +887,16 @@ Hooks.on('renderCompendium', (app, html, data) => {
         })
     }
 })
-//todo
-//allow players to put url in character image (limiting size ?)
+/*
+todo
+Summoner create eidolon using feat
+Manage lore for updates
+
+Check all Classes at 20th and cross reference feats
+
+refacter skill variables to a single object
+refactor skills and spells
+refactor the code
+
+*/
+

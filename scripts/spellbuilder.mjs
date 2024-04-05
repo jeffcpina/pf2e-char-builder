@@ -7,39 +7,57 @@ var rootPath = "flags.pf2e.spellcasting.templates", builtRules = [], spellEntrie
 //add choice set to Bloodline:Genie feat Compendium.pf2e.classfeatures.tYOMBiH3HbViNWwn
 //add choice set to Eiodolon feat Compendium.pf2e.classfeatures.qOEpe596B0UjhcG0
 async function compendiumSpellModifications(modifications, modify){
-    console.debug([`${mod} - modifying feat modification for spells`,modifications, modify])
+    //modify = false; /********* added ************/
+    console.debug([`${mod} - modifying feat modification for spells:`,modifications, (modify)?"Updating.....":"Deleting....."])
     for (let modIdx of modifications.index){
         var compendium = await modifications.getDocument(modIdx._id)
-        console.debug(["compendium",compendium.name])
         var classRules = compendium.system.rules, featRules=[]
         var isSpell = (classRules[0].label != "direct_tx") 
+        //make sure all direct_tx has slug to work properly
+        
         if (isSpell) classRules.forEach(feat=>{featRules.push(feat.value)})
-            else featRules = compendium.system.rules
-        for (let entry of featRules){
-            if (entry == undefined) continue
-            var id = entry.id, id=id.split("."), db=`${id[1]}.${id[2]}`;
-            var feat = await game.packs.get(db).getDocument(id[4])
-            console.debug(["feat",feat,id[4]])
-            var originRules = feat.system.rules
-            var rules = (isSpell) ? process_spell_commands(originRules,entry, modify)
-                      : process_direct_commands(originRules, entry, modify)
-            
-            if (rules) {
-                await Item.updateDocuments([{_id: id[4], system:{rules: rules} }], {pack: db});
-                var descript = (modify)?"no of modifications":"reset to"
-                console.debug("rules",[id[4], feat.name, rules, `${descript}: ${rules.length}`]  );
+        else featRules = compendium.system.rules
+        
+        console.debug(["starting compendium",compendium.name,compendium,classRules,featRules,!isSpell])
+        
+        //if (!isSpell){//just do direct or spells **********
+            //console.debug(["looking at featRules",featRules])
+            for (let entry of featRules){
+                //console.debug(["looking at entries",entry])
+                if (entry == undefined) continue
+                if(entry.id == undefined) { console.debug(["entry.id not found *******"]); continue;}
+                var id = entry.id, id=id.split("."), db=`${id[1]}.${id[2]}`;
+                var feat = await game.packs.get(db).getDocument(id[4])
+                if (feat!=null){
+                    ///console.debug(["looking at feat",feat,id[4]])
+                    //if (id[4] == "y0jGimYdMGDJWrEq"){/****************** jcp    ********/
+                        //console.debug(["working on feat",feat.name,id[4],feat])
+                        
+                        var originRules = feat.system.rules
+                        var rules = (isSpell) ? process_spell_commands(originRules,entry, modify)
+                                : process_direct_commands(originRules, entry, modify)
+                        
+                        if (rules) {
+                                await Item.updateDocuments([{_id: id[4], system:{rules: rules} }], {pack: db});
+                                var descript = (modify)?"no of modifications":"reset to"
+                                console.debug("updating rules",[id[4], feat.name, rules, `${descript}: ${rules.length}`]  );
+                        }
+                    //}/****************** jcp    ********/
+                } else console.debug(["*****  feat not found   *****", db,id[4]])
             }
-        }
+        //}/****************** jcp    ********/
     }
     return (modify)?"Wizard Generator has been added":"Wizard Generator has been removed";
 }
 function process_direct_commands(originRules, entry, modify){
+    //console.debug(["direct process", originRules, entry])
     var rules = false;
     if(!(originRules.find(selected=>selected.slug==entry.slug))){
         if(modify){
             var rule=entry; delete rule.label; originRules.push(rule);rules = originRules
         }
-    } else if(!modify){rules = originRules.filter(selected=>selected.slug!=entry.slug)}        
+    } else if(!modify){rules = originRules.filter(selected=>selected.slug!=entry.slug)}   
+    //console.debug(["Got Rules",rules, originRules])     
     return rules
 }
 function process_spell_commands(originRules, entry, modify){
@@ -116,7 +134,7 @@ function createLine(label, val, rootSuffix ){
 async function processEachSpellBook(data){
     var actor = game.actors.get(data.actor._id)
 
-    if (actor.flags.pf2e.spellcasting.templates !=undefined){
+    if (actor.flags.pf2e?.spellcasting !=undefined){
         var spellSets = actor.flags.pf2e.spellcasting.templates
         if (spellSets !== undefined ) await cycleThruCollectedSpellBooks(collectSpellBooks(spellSets, actor), actor)
         addSpellsGrantedToClericFromDeity(actor)
@@ -136,10 +154,14 @@ function collectSpellBooks(spellSets, actor){
                    for (let key in spellBooks.spells){
                         var spellBook = spellBooks.spells[key], spellPass = (spellBook.pass !== undefined) ?  spellBook.pass : (spellBooks.pass !== undefined ? spellBooks.pass : 0)
                         if(spellBook != "folder"){
-                            if (spellPass == pass) {                            
-                                spellBook.key = key; spellBook.class = actorClassName; spellBook.slug = `${spellBook.class}-${spellBook.slug}`,
+                            if (spellPass == pass) {  
+                                console.debug(["collect",spellBook])
+                                if(spellBook.slug != "undefined") spellBook.slug = key; //forgiveness for forgetting slug in spellbook
+                                if( spellBook.slug.includes("-") ) data = spellBook.slug.split("-")[1]  
+                                var dedication = (actor.class.name.toLowerCase() != actorClassName) ? "-dedication" : ""                           
+                                spellBook.key = key; spellBook.class = actorClassName; spellBook.slug = `${spellBook.class}-${spellBook.slug}${dedication}`,
                                 spellBook.tradition = (spellBook.tradition !== undefined) ?  spellBook.tradition : (spellBooks.tradition !== undefined ? spellBooks.tradition : undefined)
-                                entries.push(spellBook)
+                                if (spellbookValid(spellBook,actor)) entries.push(spellBook)
                             }
                             if (spellPass > pass) morePasses = true;
                         }
@@ -151,6 +173,14 @@ function collectSpellBooks(spellSets, actor){
     }
     while (morePasses);
     return entries
+}
+function spellbookValid(spells,actor){
+    //added for compatibility with dedications
+    var data = spells.slug.split("-"), spellClass = data[0].toLowerCase(),
+    isCharClass= actor.class.name.toLowerCase() == spellClass,
+    isValidDedication=((!isCharClass) && (data[1] == "main"));
+
+    return (isValidDedication || isCharClass)
 }
 function spellConditionMet(actor, conditions){
     var res = false; Object.keys(conditions).forEach(key => {if (conditions[key].type == "feat") res = actor.items.some(feat=>conditions[key].value == feat.slug)})
@@ -181,6 +211,7 @@ function getSysInfo(actor, spells){
     return info;
 }  
 async function createSpellEntryFromSource(actor,spellbook){
+    console.debug(["initial",spellbook])
     var model = (await game.packs.get("pf2e-char-builder.pf2e-cb-actors").getDocument( 
                             game.packs.get("pf2e-char-builder.pf2e-cb-actors").index.contents[0]._id
                 )).spellcasting.contents[0]
@@ -193,17 +224,21 @@ async function createSpellEntryFromSource(actor,spellbook){
             slug: {value: spellbook.slug}
         } 
     }
+    var className = cap(spellbook.slug.split("-")[0])
     //rename spellbook: append spec name to configured name
-    data[`name`] = (spellbook.name !== undefined) ? spellbook.name + " - " + cap(spellbook.tradition) + " " + cap(spellbook.prepared) + " Spells"
-        : cap(spellbook.tradition) + " " + cap(spellbook.prepared) + " Spells"
-    //console.debug(["data",data]);
+    data[`name`] = (spellbook.name !== undefined) ? className + " - " + spellbook.name + " - " + cap(spellbook.tradition) + " " + cap(spellbook.prepared) + " Spells"
+        : className + " - " + cap(spellbook.tradition) + " " + cap(spellbook.prepared) + " Spells"
+    console.debug(["data",data]);
     return (await actor.updateEmbeddedDocuments("Item", [data])).shift()
 }
 function cap(word){return (word!==undefined)?word.charAt(0).toUpperCase() + word.slice(1):""}
 async function addSpellBookModifications(spells, actor){
     //console.debug(["spells",spells]) 
-    addSpellSlots(spells, actor)
-    addSpelltoSpellbook(spells, actor)
+    var data = spells.slug.split("-"), isCharClass= actor.class.name.toLowerCase() == data[0],
+    isValidDedication=((!isCharClass) && (data[1] == "main"));
+    
+    if (isValidDedication || isCharClass)  addSpellSlots(spells, actor)
+    if (isCharClass) addSpelltoSpellbook(spells, actor)
 }
 async function getClassSpellSlots(actor){
     //get journal of class retrive spell qty and level info
@@ -225,52 +260,75 @@ async function getClassSpellSlots(actor){
 async function addSpellSlots(spells, actor){
     var data = {};
     //add spell slots & spells learn 
-    if (spells.slots !== undefined){
-        //console.debug(["slots",spells.slots])
-        var slots = spells.slots;
-        Object.keys(slots).forEach(async function(key) {
-            //check for folder
-            if (key!="_folder"){var qty = slots[key].max; data[`system.slots.${key}.max`] = qty; data[`system.slots.${key}.value`] = qty; }
-        })
-    } 
-    else {
-        if (spells.key=="main" && (spells.type !== undefined)) {
-            var foundSlots = await getClassSpellSlots(actor)
-            data = {...data, ...(foundSlots)}
-    }    }
+    if (spells?.perRank != undefined) {
+            var books = spells.books; books.perRank=spells.perRank,books.slots = actor.spellcasting.get(spells.id).system.slots
+            data = await getSlotsPerRank(actor,books) //rank
+        }
+        else if ((spells.slots !== undefined && spells.key!="main") ||  (spells.key=="main" && actor.class.name.toLowerCase() != spells.class) ){//general
+            //console.debug(["slots",spells.slots])
+            var slots = spells.slots;
+            Object.keys(slots).forEach(async function(key) {
+                //check for folder
+                if (key!="_folder"){var qty = slots[key].max; data[`system.slots.${key}.max`] = qty; data[`system.slots.${key}.value`] = qty; }
+            })
+        } 
+            else {//get main spell slots from table in Journal //class
+                if (spells.key=="main" && (spells.type !== undefined)) {
+                    var foundSlots = await getClassSpellSlots(actor)
+                    data = {...data, ...(foundSlots)}
+                }    
+            }
     if (spells.books !== undefined){
         if (data["system.prepared.value"]=="prepared"){ data[`system.prepared.cantrip`] = spells.books.book0.max; data[`system.prepared.spells`] = spells.books.totals;}
     } 
-    if (! $.isEmptyObject(data)){ data["_id"]=spells.id;  await actor.updateEmbeddedDocuments("Item", [data]) }
+    if (! $.isEmptyObject(data)){ 
+        data["_id"]=spells.id;  await actor.updateEmbeddedDocuments("Item", [data]) 
+        console.debug(["slots added",data])
+    }
 }
-function addSpelltoSpellbook(spells, actor){
+async function getSlotsPerRank(actor,limits){
+    var level = actor.level, slots = limits.slots , data = {}, maxLevel = Math.ceil((actor.level)/2)
+    for (let i = 0; i < 11; i++) {
+        if (maxLevel >= i) { 
+            if (slots[`slot${i}`]?.max != limits.perRank){
+                data[`system.slots.slot${i}.max`] = limits.perRank; data[`system.slots.slot${i}.value`] = limits.perRank;
+            }     
+        }
+    }
+    return data;
+}
+export async function addSpelltoSpellbook(spells, actor, update=false){
     //add spells
+    var data = spells.slug.split("-"), className=data[0], bookName=data[1], suffix = (bookName=="main")?" - Bonus":"",
+        spellCollection = []
     if (spells.spellList !== undefined){
         var spellArrays = spells.spellList;
         Object.keys(spellArrays).forEach(spellIndex=>{
             var spelsPerLevel = spellArrays[spellIndex];
             Object.keys(spelsPerLevel).forEach(async spellName=>{ 
-                //console.debug(["spellName",spellName])
                 if (spellName!="_folder"){
                     if (Number(spellIndex) <= Math.ceil(actor.level/2) ){
                         var spellFound = actor.items.find(el=>el.sourceId==spelsPerLevel[spellName]),//check if spell exists --- need to add
                         spell_id = spelsPerLevel[spellName], splitW = spell_id.split("."),
                         spelldb = `${splitW[1]}.${splitW[2]}`, spell_id = splitW[4]; 
-                        var spellObj = (await game.packs.get(spelldb).getDocuments({_id: spell_id}))
-                        //console.debug(["spellClone",spellIndex, spellName, spelldb,spell_id,spellObj])
-                        var spellClone = await ((await game.packs.get(spelldb).getDocuments({_id: spell_id})
-                                            ).shift()).clone({"system.location.value": spells.id}
-                        ).toObject()
-                        if (!spellFound) {
-                            //console.debug(["added ",spellName]);
-                            (await actor.createEmbeddedDocuments("Item", [spellClone])).shift() 
-                        }
+                        var spellOrig = await game.packs.get(spelldb).getDocument(spell_id);
+                        //console.debug(["spellClone",spellIndex, spellName, spelldb,spell_id,spellObj, spellFound])
+                        console.debug(["attempted to add:",spellOrig,spell_id,spellName]);
+                        if(spellOrig != null) {    
+                            var spellClone = await ((spellOrig))
+                                .clone({"name":`${spellOrig.name}${suffix}`,"system.location.value": spells.id,"system.isBonus":true}).toObject()
+                            //console.debug(["name",spellOrig,spellOrig.name,bookName, !spellFound])
+                            if (!spellFound) {
+                                await actor.createEmbeddedDocuments("Item", [spellClone])
+                                console.debug(["added ",spellOrig.name,spellClone]);
+                            }
+                        } else console.debug(["Spell not found ",spellOrig,spell_id,spellName,spelsPerLevel])
                     }
                 }
             })
         })
-    }    
-    return spells;
+    }     
+    return (update) ? spellCollection : spells;
 }
 async function checkForDeityDomainFeats(actor){
         //find targets
@@ -328,25 +386,26 @@ function createFeatRule(level,name,value) {
 }
 async function addSpellsGrantedToClericFromDeity(actor){
    if (actor.class.name=="Cleric"){
-       var spells = actor.deity.system.spells;
-       var slug = `${actor.class.name}-main`; slug=slug.toLowerCase()
-       var entry = actor.spellcasting.collections.find(el=>{return el.entry.slug==slug})
-       var spellsToPost = []
+       var spells = actor.deity.system.spells, slug = `${actor.class.name}-main`, suffix = " - Bonus",
+       spellsToPost = [] 
+       slug=slug.toLowerCase()
+       var entry = actor.spellcasting.collections.find(el=>{return el.entry.system.slug.value==slug})
+       
        if (entry){
-           Object.keys(spells).forEach( async spellIndex=>{
+           for (let spellIndex of Object.keys(spells)){
                if (Number(spellIndex) <= Math.ceil(actor.level/2) ){
-                   var spellFound = actor.items.find(el=>el.sourceId==spells[spellIndex])//check if spell exists --- need to add
+                   var spellFound = actor.items.find(el=>el.sourceId==spells[spellIndex])//check if spell exists in book
                    if (!spellFound) {
                         var spell_id = spells[spellIndex], splitW = spell_id.split(".")
-                        var spelldb = `${splitW[1]}.${splitW[2]}`, spell_id = splitW[3];
-                        var spellClone = await ((await game.packs.get(spelldb).getDocuments({_id: spell_id})
-                                            ).shift()).clone({"system.location.value": entry.id}
-                        ).toObject()
+                        var spelldb = `${splitW[1]}.${splitW[2]}`, spell_id = splitW[4];
+                        var deitySpell = await game.packs.get(spelldb).getDocument(spell_id)
+                        if (deitySpell!=undefined){
+                            var spellClone = await deitySpell.clone({"name":`${deitySpell.name}${suffix}`,"system.location.value": entry.id,"system.isBonus":true}).toObject()         
                         spellsToPost.push(spellClone)
+                        } else console.debug(["****  Could not find spell in database"])
                    }
-                   
                }
-           })
+           }
            var result = await actor.createEmbeddedDocuments("Item", spellsToPost)
        }
    }
@@ -405,18 +464,41 @@ export class Settings {
                 console.debug(["hello variable"])
             }
         });
+        game.settings.register(mod, 'viewing_store', {
+            name: 'viewing Store',
+            scope: 'client',     // "world" = sync to db, "client" = local storage
+            config: false,       // false if you dont want it to show in module config
+            type: Boolean,       // Number, Boolean, String, Object
+            default: false,
+        });
+        game.settings.register(mod, 'current_tab', {
+            name: 'current tutorial tab',
+            scope: 'client',     // "world" = sync to db, "client" = local storage
+            config: false,       // false if you dont want it to show in module config
+            type: String,       // Number, Boolean, String, Object
+            default: "",
+        });
+        game.settings.register(mod, 'gm_char', {
+            name: 'gm character token simulator',
+            scope: 'client',     // "world" = sync to db, "client" = local storage
+            config: false,       // false if you dont want it to show in module config
+            type: String,       // Number, Boolean, String, Object
+            default: "",
+        });
     }
     static async updateSpellCompendiums(isSubmit) {
         var db = "pf2e-char-builder.pf2e-cb-addons";
         var classFeats = game.packs.get("pf2e.classfeatures")
+        var regFeats = game.packs.get("pf2e.feats-srd")
         await classFeats.configure({locked:false})
+        await regFeats.configure({locked:false})
         if (classFeats.locked) ui.notifications.info("***  Could not unlock Class Features ***")
         ui.notifications.info("*** Modifying Class Features ***")
         var msg = await compendiumSpellModifications(game.packs.get(db), isSubmit);
         ui.notifications.info(msg);
         await classFeats.configure({locked:true})
+        await regFeats.configure({locked:true})
     }
-
 }
 
 // Edit functions
@@ -437,12 +519,13 @@ class AddRemoveConfig extends FormApplication {
           };
     }
     async _updateObject(event, formData) {
+        game.settings.set(mod,'isCompiled',!isSubmit)
         const isSubmit = (event.submitter.id=="submit") 
         var db = "pf2e-char-builder.pf2e-cb-addons";
         //var db = "world.jeff-tests";
         var msg = await compendiumSpellModifications(game.packs.get(db), isSubmit);
         ui.notifications.info(msg);
-        game.settings.set(mod,'isCompiled',!isSubmit)
+        //game.settings.set(mod,'isCompiled',!isSubmit)
     }
 }
 
@@ -492,25 +575,28 @@ async function removeAllSpells(actor){
 //==========================
 // Hooks
 //==========================
-
 Hooks.once( "init", function() {
     Settings.registerSettings();
-});
+    CONFIG.debug.hooks = !CONFIG.debug.hooks;
+    if (CONFIG.debug.hooks)
+        console.log("NOW LISTENING TO ALL HOOK CALLS!");
+    else
+        console.log("HOOK LISTENING DISABLED.");
+    });
 Hooks.on('renderCharacterSheetPF2e', (app, html, data) => {
     if (game.settings.get(mod,'isCompiled')){
         var actor = game.actors.get(data.actor._id);
-        if((data.class !== null) && (data.ancestry !== null) && (data.background !== null) && (data.heritage !== null)){
+        if((data.class !== null)) {
             add_spellcaster_generator(app,html,data)
         }   
         checkForDeityDomainFeats(actor); 
     }
 });
-Hooks.on('renderActorSheet', (actor, html, data) => {
-    actor = game.actors.get(data.actor._id);
+Hooks.on('renderActorSheet', (app, html, data) => {
+    var actor = game.actors.get(data.actor._id);
     //add and spellbook exists
     if (actor.class==null) 
-        if(actor.spellcasting.collections.contents.length != 0)
-            checkifClassDeletedToRemoveSpells(actor, html)
+       if (actor.constructor.name == "CharacterPF2e")
+           if(actor.spellcasting.collections.contents.length != 0)
+               checkifClassDeletedToRemoveSpells(actor, html)
 });
-//to do
-//check pathfinder compedium to see if spell rules are in already
